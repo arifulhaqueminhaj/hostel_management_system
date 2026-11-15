@@ -1,1 +1,57 @@
-‣潨瑳汥浟湡条浥湥彴祳瑳浥਍਍敎瑳牯⁡獩愠䐠慪杮ⵯ慢敳⁤潨瑳汥洠湡条浥湥⁴祳瑳浥മഊ⌊‣畒⁮潬慣汬൹ഊ怊恠潰敷獲敨汬਍祰桴湯ⴠ⁭敶癮⸠敶癮਍瘮湥屶捓楲瑰屳捁楴慶整瀮ㅳ਍祰桴湯ⴠ⁭楰⁰湩瑳污⁬爭爠煥極敲敭瑮⹳硴൴䌊灯⵹瑉浥⸠湥⹶硥浡汰⁥攮癮਍祰桴湯洠湡条⹥祰洠杩慲整਍祰桴湯洠湡条⹥祰爠湵敳癲牥਍恠ൠഊ匊瑥攠癮物湯敭瑮瘠牡慩汢獥映潲⁭⹠湥⹶硥浡汰恥椠⁮潹牵猠敨汬漠⁲敤敶潬浰湥൴攊癮物湯敭瑮‮潌慣⁬敤敶潬浰湥⁴獵獥匠䱑瑩⁥桷湥怠䅄䅔䅂䕓啟䱒⁠獩甠獮瑥മഊ吊⁯潬摡猠浡汰⁥潨瑳汥搠瑡ⱡ猠瑥琠敨敳瘠牡慩汢獥琠⁯瑳潲杮‬湵煩敵瀠獡睳牯獤਍敢潦敲爠湵楮杮怠祰桴湯洠湡条⹥祰猠敥彤敮瑳牯恡ഺഊⴊ怠䕎呓剏彁䕄位䅟䵄义偟十坓剏恄਍‭习卅佔䅒䑟䵅彏䅍䅎䕇归䅐卓佗䑒ൠⴊ怠䕎呓剏彁䕄位剟久䕔归䅐卓佗䑒ൠഊ⌊‣敄汰祯琠⁯敖捲汥਍਍浉潰瑲琠楨⁳楇䡴扵爠灥獯瑩牯⁹獡愠䐠慪杮⁯牰橯捥⁴湩嘠牥散⹬嘠牥散⁬敤整瑣൳怊慭慮敧瀮恹‬湩瑳污獬怠敲畱物浥湥獴琮瑸Ⱡ愠摮挠汯敬瑣⁳楦敬⁳牦浯怠呓呁䍉剟住恔മഊ䌊湯楦畧敲琠敨敳嘠牥散⁬湥楶潲浮湥⁴慶楲扡敬⁳潦⁲癥牥⁹湥楶潲浮湥⁴潹⁵獵㩥਍਍‭䑠䅊䝎彏䕓剃呅䭟奅㩠愠渠睥祬朠湥牥瑡摥‬牰癩瑡⁥橄湡潧猠捥敲⁴敫⹹਍‭䑠呁䉁十彅剕恌›⁡数獲獩整瑮倠獯杴敲兓⁌潣湮捥楴湯唠䱒‮敖捲汥映湵瑣潩൮ 映汩獥獹整獭愠敲攠桰浥牥污※潤渠瑯甠敳匠䱑瑩⁥潦⁲⁡楬敶搠灥潬浹湥⹴਍‭䑠䅊䝎彏䱁佌䕗彄佈呓恓›灯楴湯污挠浯慭猭灥牡瑡摥挠獵潴⁭潨瑳慮敭⹳嘠牥散൬ 搠灥潬浹湥⁴潨瑳慮敭⁳牡⁥摡敤⁤畡潴慭楴慣汬⹹਍‭䍠剓彆剔单䕔彄剏䝉义恓›灯楴湯污挠浯慭猭灥牡瑡摥漠楲楧獮椠据畬楤杮怠瑨灴㩳⼯⹠਍‭占䱓佃䵍剅彚呓剏彅䑉⁠湡⁤占䱓佃䵍剅彚呓剏彅䅐卓佗䑒㩠漠瑰潩慮⁬慰浹湥൴ 朠瑡睥祡挠敲敤瑮慩獬※潣普杩牵⁥畣牲湥⁴牣摥湥楴污⁳牰癩瑡汥⁹湩嘠牥散⹬਍਍晁整⁲敳瑴湩⁧灵琠敨搠瑡扡獡ⱥ爠湵怠祰桴湯洠湡条⹥祰洠杩慲整⁠条楡獮⁴瑩戠晥牯൥甊楳杮琠敨愠灰楬慣楴湯‮潄渠瑯挠浯業⁴⹠湥恶映汩獥‬牰摯捵楴湯挠敲敤瑮慩獬ബ搊瑡扡獡⁥楦敬ⱳ漠⁲灵潬摡摥洠摥慩മ
+# hostel_management_system
+
+Nestora is a Django-based hostel management system.
+
+## Run locally
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+python manage.py migrate
+python manage.py runserver
+```
+
+Local development uses SQLite when `DATABASE_URL` is unset. To load sample
+hostel data, set these variables to strong, unique passwords before running
+`python manage.py seed_nestora`:
+
+- `NESTORA_DEMO_ADMIN_PASSWORD`
+- `NESTORA_DEMO_MANAGER_PASSWORD`
+- `NESTORA_DEMO_RENTER_PASSWORD`
+
+## Deploy with SQLite on Render
+
+Vercel's function filesystem is temporary and is not suitable for a persistent
+SQLite database. To keep SQLite in production, deploy as a Render web service
+with a persistent disk. Render persistent disks require a paid service.
+
+Create a Render **Web Service** from this GitHub repository and configure:
+
+- Build command: `pip install -r requirements.txt && python manage.py collectstatic --noinput`
+- Start command: `gunicorn nestora.wsgi:application`
+- Pre-deploy command: `python manage.py migrate`
+- Persistent disk mount path: `/var/data`
+
+Set these Render environment variables:
+
+- `DJANGO_SECRET_KEY`: a newly generated, private Django secret key.
+- `DJANGO_DEBUG`: `false`.
+- `SQLITE_PATH`: `/var/data/db.sqlite3`.
+- `MEDIA_ROOT`: `/var/data/media`.
+- `CSRF_TRUSTED_ORIGINS`: your service origin, including `https://`.
+- `SSLCOMMERZ_STORE_ID` and `SSLCOMMERZ_STORE_PASSWORD`: optional payment
+  gateway credentials; configure current credentials privately in Render.
+
+Keep the service to one instance when using SQLite. The Render disk stores the
+production database and uploaded files persistently.
+
+To generate a Django secret key locally, run:
+
+```powershell
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+Do not commit `.env` files, production credentials, database files, or uploaded
+media.
