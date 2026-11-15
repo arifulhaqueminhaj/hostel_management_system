@@ -3,6 +3,7 @@ from pathlib import Path
 
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
+from django.core.management.utils import get_random_secret_key
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,17 +14,19 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
     if not DEBUG:
         raise ImproperlyConfigured('Set DJANGO_SECRET_KEY when DEBUG is disabled.')
-    SECRET_KEY = 'local-development-only-key'
+    SECRET_KEY = get_random_secret_key()
 
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+    for host in os.environ.get(
+        'ALLOWED_HOSTS',
+        os.environ.get('DJANGO_ALLOWED_HOSTS', ''),
+    ).split(',')
     if host.strip()
 ]
 for deployment_host in (
     os.environ.get('VERCEL_URL'),
     os.environ.get('VERCEL_PROJECT_PRODUCTION_URL'),
-    os.environ.get('RENDER_EXTERNAL_HOSTNAME'),
 ):
     if deployment_host and deployment_host not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(deployment_host)
@@ -128,7 +131,6 @@ CSRF_TRUSTED_ORIGINS.extend(
     for host in (
         os.environ.get('VERCEL_URL'),
         os.environ.get('VERCEL_PROJECT_PRODUCTION_URL'),
-        os.environ.get('RENDER_EXTERNAL_HOSTNAME'),
     )
     if host
 )
@@ -140,6 +142,8 @@ CSRF_TRUSTED_ORIGINS.extend(
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = not DEBUG
+SECURE_HSTS_SECONDS = 3600 if not DEBUG else 0
 
 # Currency
 NESTORA_CURRENCY = '৳'
