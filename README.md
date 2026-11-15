@@ -30,8 +30,7 @@ with a persistent disk. Render persistent disks require a paid service.
 Create a Render **Web Service** from this GitHub repository and configure:
 
 - Build command: `pip install -r requirements.txt && python manage.py collectstatic --noinput`
-- Start command: `gunicorn nestora.wsgi:application`
-- Pre-deploy command: `python manage.py migrate`
+- Start command: `python manage.py migrate && gunicorn nestora.wsgi:application`
 - Persistent disk mount path: `/var/data`
 
 Set these Render environment variables:
