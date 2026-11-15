@@ -1,0 +1,151 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Cancel Booking {{ booking.booking_reference }} - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'booking_detail' booking.pk %}">{{ booking.booking_reference }}</a></li>
+                <li class="breadcrumb-item active">Cancel</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-times-circle"></i>Cancel Booking</h1>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card fade-in">
+            <div class="card-header">
+                <span><i class="fas fa-info-circle me-2 text-accent"></i>Cancellation Details</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Reference</p>
+                        <p class="fw-semibold">{{ booking.booking_reference }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Room</p>
+                        <p class="fw-semibold">{{ booking.room.room_number }} ({{ booking.room.hostel.name }})</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Check-in Date</p>
+                        <p class="fw-semibold">{{ booking.check_in|date:"M d, Y" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Days Before Check-in</p>
+                        <p class="fw-semibold">
+                            {% if days_before > 0 %}{{ days_before }} day{{ days_before|pluralize }}{% else %}Check-in date passed{% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6 class="fw-bold mb-3"><i class="fas fa-calculator me-1 text-accent"></i>Refund Calculation</h6>
+                <table class="table table-borderless mb-3">
+                    <tr>
+                        <td class="text-muted">Amount Paid</td>
+                        <td class="text-end fw-bold">${{ amount_paid }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">
+                            Cancellation Fee
+                            <br><small class="text-muted">
+                                {% if days_before > 30 %}Free (>30 days)
+                                {% elif days_before > 15 %}10% (15-30 days)
+                                {% elif days_before > 7 %}25% (7-15 days)
+                                {% elif days_before > 3 %}50% (3-7 days)
+                                {% else %}100% ({% if days_before > 0 %}<3 days{% else %}after check-in{% endif %})
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td class="text-end fw-bold text-danger">${{ cancellation_fee }}</td>
+                    </tr>
+                    <tr class="border-top">
+                        <td class="fw-bold">Refund Amount</td>
+                        <td class="text-end fw-bold fs-5" style="color:var(--accent);">${{ refund_amount }}</td>
+                    </tr>
+                </table>
+
+                {% if refund_amount > 0 %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Your refund of <strong>${{ refund_amount }}</strong> will be processed within 5-7 business days.
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    No refund is available for cancellations this close to the check-in date.
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-comment me-1 text-accent"></i>Reason for Cancellation (optional)</label>
+                        <textarea name="reason" class="form-control" rows="3" placeholder="Please provide a reason for your cancellation..."></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'booking_detail' booking.pk %}" class="btn btn-ghost">
+                            <i class="fas fa-arrow-left me-1"></i>Go Back
+                        </a>
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this booking? This action cannot be undone.')">
+                            <i class="fas fa-times me-1"></i>Confirm Cancellation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card fade-in delay-1">
+            <div class="card-header">
+                <span><i class="fas fa-file-invoice me-2 text-accent"></i>Cancellation Policy</span>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td><span class="badge badge-success">> 30 days</span></td>
+                        <td class="text-end text-muted">Full refund (0% fee)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">15 - 30 days</span></td>
+                        <td class="text-end text-muted">10% cancellation fee</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-warning">7 - 15 days</span></td>
+                        <td class="text-end text-muted">25% cancellation fee</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-danger">3 - 7 days</span></td>
+                        <td class="text-end text-muted">50% cancellation fee</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-cancelled">< 3 days</span></td>
+                        <td class="text-end text-muted">No refund (100% fee)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card fade-in delay-2 mt-4">
+            <div class="card-header">
+                <span><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Important</span>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0 small text-muted">
+                    <li>Cancellation is permanent and cannot be undone.</li>
+                    <li>Refunds are processed to the original payment method.</li>
+                    <li>Processing may take 5-7 business days.</li>
+                    <li>Once checked in, please use check-out instead.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

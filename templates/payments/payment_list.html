@@ -1,0 +1,176 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Payment Management - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Payment Management</li>
+      </ol>
+    </nav>
+    <h1 class="page-title"><i class="fas fa-coins"></i>Payment Management</h1>
+  </div>
+</div>
+<div class="card fade-in mb-4">
+  <div class="card-header">
+    <span><i class="fas fa-filter me-2"></i>Filter Payments</span>
+    {% if total_amount %}
+      <span class="badge badge-success fs-6"><i class="fas fa-wallet me-1"></i>Total: {{ settings.NESTORA_CURRENCY|default:'৳' }} {{ total_amount }}</span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <form method="get" class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select">
+          <option value="">All Statuses</option>
+          <option value="success" {% if request.GET.status == 'success' %}selected{% endif %}>Success</option>
+          <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>Failed</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Method</label>
+        <select name="method" class="form-select">
+          <option value="">All Methods</option>
+          <option value="sslcommerz" {% if request.GET.method == 'sslcommerz' %}selected{% endif %}>Online (SSLCommerz)</option>
+          <option value="cod" {% if request.GET.method == 'cod' %}selected{% endif %}>Cash on Delivery</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">From</label>
+        <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">To</label>
+        <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+      </div>
+      <div class="col-md-3 d-flex align-items-end gap-2">
+        <button type="submit" class="btn btn-nestora flex-fill"><i class="fas fa-search me-1"></i>Filter</button>
+        <a href="{% url 'payment_history' %}" class="btn btn-outline-nestora"><i class="fas fa-undo"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="card fade-in">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Renter</th>
+          <th>Room</th>
+          <th>Amount</th>
+          <th>Method</th>
+          <th>Transaction ID</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for payment in page_obj %}
+          <tr>
+            <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+            <td>
+              {% if payment.booking and payment.booking.user %}
+                {{ payment.booking.user.get_full_name|default:payment.booking.user.email }}
+              {% else %}
+                {{ payment.user.get_full_name|default:"&mdash;" }}
+              {% endif %}
+            </td>
+            <td>
+              {% if payment.booking and payment.booking.room %}
+                {{ payment.booking.room.room_number }}
+              {% else %}
+                &mdash;
+              {% endif %}
+            </td>
+            <td class="fw-bold">{{ settings.NESTORA_CURRENCY|default:'৳' }} {{ payment.amount }}</td>
+            <td>
+              {% if payment.payment_method == 'cod' %}
+                <span class="badge bg-success text-white"><i class="fas fa-money-bill-wave me-1"></i>Cash on Delivery</span>
+              {% else %}
+                <span class="badge bg-info text-white"><i class="fas fa-credit-card me-1"></i>Online (SSLCommerz)</span>
+              {% endif %}
+            </td>
+            <td class="text-muted small">
+              {% if payment.payment_method == 'cod' %}
+                <span class="text-warning fw-semibold">COD</span>
+              {% else %}
+                {{ payment.transaction_id|default:"&mdash;"|truncatechars:16 }}
+              {% endif %}
+            </td>
+            <td>
+              {% if payment.payment_method == 'cod' and payment.status != 'success' and payment.status != 'paid' %}
+                <span class="badge badge-warning"><i class="fas fa-money-bill-wave me-1"></i> Pending COD</span>
+              {% elif payment.status == 'success' or payment.status == 'paid' %}
+                <span class="badge badge-paid"><i class="fas fa-check-circle me-1"></i> Paid</span>
+              {% elif payment.status == 'pending' %}
+                <span class="badge badge-pending"><i class="fas fa-clock me-1"></i> Pending</span>
+              {% elif payment.status == 'failed' %}
+                <span class="badge badge-danger"><i class="fas fa-times-circle me-1"></i> Failed</span>
+              {% else %}
+                <span class="badge badge-cancelled">{{ payment.status|title }}</span>
+              {% endif %}
+            </td>
+            <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+            <td class="text-center table-actions">
+              {% if payment.status == 'success' or payment.status == 'paid' %}
+                <a href="{% url 'payment_receipt_detail' payment.id %}" class="btn btn-icon btn-outline-nestora" title="View Receipt"><i class="fas fa-receipt"></i></a>
+                <a href="{% url 'payment_receipt_download' payment.id %}" class="btn btn-icon btn-outline-nestora" title="Download PDF"><i class="fas fa-download"></i></a>
+              {% elif payment.payment_method == 'cod' %}
+                <form method="post" action="{% url 'mark_cod_paid' payment.id %}" class="d-inline" onsubmit="return confirm('Confirm that this COD payment of {{ settings.NESTORA_CURRENCY|default:'৳' }}{{ payment.amount }} has been received?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-success" title="Mark COD payment as received"><i class="fas fa-check-circle me-1"></i>Verify</button>
+                </form>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="9">
+              <div class="empty-state">
+                <i class="fas fa-coins"></i>
+                <h5>No Payments Found</h5>
+                <p>No payments match your filters.</p>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% if page_obj.has_other_pages %}
+  <nav class="mt-4 d-flex justify-content-center" aria-label="Payment pagination">
+    <ul class="pagination">
+      {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page=1{% if request.GET.status %}&amp;status={{ request.GET.status }}{% endif %}{% if request.GET.method %}&amp;method={{ request.GET.method }}{% endif %}{% if request.GET.date_from %}&amp;date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&amp;date_to={{ request.GET.date_to }}{% endif %}"><i class="fas fa-angle-double-left"></i></a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&amp;status={{ request.GET.status }}{% endif %}{% if request.GET.method %}&amp;method={{ request.GET.method }}{% endif %}{% if request.GET.date_from %}&amp;date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&amp;date_to={{ request.GET.date_to }}{% endif %}"><i class="fas fa-angle-left"></i></a></li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link"><i class="fas fa-angle-double-left"></i></span></li>
+        <li class="page-item disabled"><span class="page-link"><i class="fas fa-angle-left"></i></span></li>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.status %}&amp;status={{ request.GET.status }}{% endif %}{% if request.GET.method %}&amp;method={{ request.GET.method }}{% endif %}{% if request.GET.date_from %}&amp;date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&amp;date_to={{ request.GET.date_to }}{% endif %}">{{ num }}</a></li>
+        {% endif %}
+      {% endfor %}
+      {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&amp;status={{ request.GET.status }}{% endif %}{% if request.GET.method %}&amp;method={{ request.GET.method }}{% endif %}{% if request.GET.date_from %}&amp;date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&amp;date_to={{ request.GET.date_to }}{% endif %}"><i class="fas fa-angle-right"></i></a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&amp;status={{ request.GET.status }}{% endif %}{% if request.GET.method %}&amp;method={{ request.GET.method }}{% endif %}{% if request.GET.date_from %}&amp;date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&amp;date_to={{ request.GET.date_to }}{% endif %}"><i class="fas fa-angle-double-right"></i></a></li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link"><i class="fas fa-angle-right"></i></span></li>
+        <li class="page-item disabled"><span class="page-link"><i class="fas fa-angle-double-right"></i></span></li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+{% endblock %}

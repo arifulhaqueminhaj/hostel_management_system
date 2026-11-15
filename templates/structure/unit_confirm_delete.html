@@ -1,0 +1,23 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Delete Unit {{ unit.name }} - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-body p-5">
+                <i class="fas fa-exclamation-triangle" style="font-size:4rem;color:var(--accent);"></i>
+                <h4 class="fw-bold mt-3">Delete Unit {{ unit.name }}</h4>
+                <p class="text-muted mb-4">Are you sure you want to delete <strong>Unit {{ unit.name }}</strong> on <strong>{{ unit.floor.display_name }}</strong>? Rooms in this unit will keep existing but become unassigned. This action cannot be undone.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{% url 'unit_list' unit.floor.pk %}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-trash"></i> Confirm Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

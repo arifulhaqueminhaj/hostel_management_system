@@ -1,0 +1,78 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Payment Receipt - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="text-center mb-4 no-print">
+  <button class="btn btn-nestora btn-lg" onclick="window.print()"><i class="fas fa-print me-2"></i>Print Receipt</button>
+</div>
+<div class="receipt fade-in">
+  <div class="receipt-header">
+    <i class="fas fa-building text-accent" style="font-size: 2.5rem;"></i>
+    <h3>{{ nestora_name }}</h3>
+    <p>Smart Living. Smarter Management.</p>
+    <h4 class="fw-bold mt-3">Payment Receipt</h4>
+  </div>
+  <div class="receipt-body">
+    <div class="row">
+      <div class="col-6"><span class="label">Receipt No.</span></div>
+      <div class="col-6"><span class="value">{{ payment.receipt_number|default:payment.transaction_id|default:"&mdash;" }}</span></div>
+    </div>
+    <div class="row">
+      <div class="col-6"><span class="label">Date</span></div>
+      <div class="col-6"><span class="value">{{ payment.created_at|date:"F d, Y" }}</span></div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col-6"><span class="label">Customer</span></div>
+      <div class="col-6"><span class="value">{{ payment.booking.user.get_full_name|default:payment.booking.user.email }}</span></div>
+    </div>
+    <div class="row">
+      <div class="col-6"><span class="label">Email</span></div>
+      <div class="col-6"><span class="value small">{{ payment.booking.user.email }}</span></div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col-6"><span class="label">Booking Reference</span></div>
+      <div class="col-6"><span class="value">{{ payment.booking.booking_reference }}</span></div>
+    </div>
+    <div class="row">
+      <div class="col-6"><span class="label">Hostel</span></div>
+      <div class="col-6"><span class="value">{{ payment.booking.room.hostel.name }}</span></div>
+    </div>
+    <div class="row">
+      <div class="col-6"><span class="label">Room</span></div>
+      <div class="col-6"><span class="value">{{ payment.booking.room.room_number }}</span></div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col-6"><span class="label">Payment Method</span></div>
+      <div class="col-6"><span class="value">{{ payment.get_payment_method_display|default:"&mdash;" }}</span></div>
+    </div>
+    <div class="row">
+      <div class="col-6"><span class="label">Transaction ID</span></div>
+      <div class="col-6"><span class="value small">{{ payment.transaction_id|default:"&mdash;" }}</span></div>
+    </div>
+    <div class="row">
+      <div class="col-6"><span class="label">Status</span></div>
+      <div class="col-6">
+        <span class="value">
+          {% if payment.status == 'success' or payment.status == 'paid' %}
+            <span class="badge badge-paid">Paid</span>
+          {% elif payment.status == 'pending' %}
+            <span class="badge badge-pending">Pending</span>
+          {% elif payment.status == 'failed' %}
+            <span class="badge badge-danger">Failed</span>
+          {% else %}
+            <span class="badge badge-cancelled">{{ payment.status|title }}</span>
+          {% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="receipt-footer">
+    <div class="receipt-total">{{ settings.NESTORA_CURRENCY|default:'$' }} {{ payment.amount }}</div>
+    <div class="receipt-stamp mt-2"><i class="fas fa-check-circle me-1"></i>PAID</div>
+    <p class="text-muted small mt-3 mb-0">Thank you for choosing {{ nestora_name }}</p>
+  </div>
+</div>
+{% endblock %}

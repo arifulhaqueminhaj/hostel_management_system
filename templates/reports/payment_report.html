@@ -1,0 +1,195 @@
+﻿{% extends 'base.html' %}
+{% load static payment_filters %}
+{% block title %}Payment Report - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <h1 class="page-title"><i class="fas fa-credit-card"></i>Payment Report</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'report_index' %}">Reports</a></li>
+                <li class="breadcrumb-item active">Payment Report</li>
+            </ol>
+        </nav>
+    </div>
+    <div>
+        <a href="{% url 'report_index' %}" class="btn btn-outline-nestora btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Reports
+        </a>
+    </div>
+</div>
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">From Date</label>
+                <input type="date" name="from" class="form-control" value="{{ request.GET.from|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To Date</label>
+                <input type="date" name="to" class="form-control" value="{{ request.GET.to|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="success" {% if request.GET.status == 'success' %}selected{% endif %}>Success</option>
+                    <option value="processing" {% if request.GET.status == 'processing' %}selected{% endif %}>Processing</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>Failed</option>
+                    <option value="refunded" {% if request.GET.status == 'refunded' %}selected{% endif %}>Refunded</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Payment Type</label>
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="room" {% if request.GET.type == 'room' %}selected{% endif %}>Room Booking</option>
+                    <option value="meal" {% if request.GET.type == 'meal' %}selected{% endif %}>Meal</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-nestora"><i class="fas fa-filter me-1"></i> Apply Filter</button>
+                <a href="{% url 'payment_report' %}" class="btn btn-ghost">Reset</a>
+                <div class="dropdown float-end">
+                    <button class="btn btn-outline-nestora dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-download me-1"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'export_pdf' 'payments' %}?start_date={{ request.GET.from|default:'' }}&end_date={{ request.GET.to|default:'' }}"><i class="fas fa-file-pdf me-2"></i>Export PDF</a></li>
+                        <li><a class="dropdown-item" href="{% url 'export_excel' 'payments' %}?start_date={{ request.GET.from|default:'' }}&end_date={{ request.GET.to|default:'' }}"><i class="fas fa-file-excel me-2"></i>Export Excel</a></li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 fade-in delay-1">
+        <div class="stat-card success">
+            <div class="stat-icon"><i class="fas fa-bed"></i></div>
+            <div class="stat-value">৳ {{ room_payments|sum_amount|floatformat:0|default:0 }}</div>
+            <div class="stat-label">Room Booking Revenue</div>
+        </div>
+    </div>
+    <div class="col-md-6 fade-in delay-2">
+        <div class="stat-card info">
+            <div class="stat-icon"><i class="fas fa-utensils"></i></div>
+            <div class="stat-value">৳ {{ meal_payments|sum_amount|floatformat:0|default:0 }}</div>
+            <div class="stat-label">Meal Revenue</div>
+        </div>
+    </div>
+    <div class="col-md-6 fade-in delay-3">
+        <div class="stat-card warning">
+            <div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div>
+            <div class="stat-value">৳ {{ total_amount|floatformat:0|default:0 }}</div>
+            <div class="stat-label">Total Revenue</div>
+        </div>
+    </div>
+    <div class="col-md-6 fade-in delay-4">
+        <div class="stat-card primary">
+            <div class="stat-icon"><i class="fas fa-exchange-alt"></i></div>
+            <div class="stat-value">{{ total_count|default:0 }}</div>
+            <div class="stat-label">Total Payments</div>
+        </div>
+    </div>
+</div>
+
+<!-- Room Booking Payments -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-bed me-2 text-accent"></i>Room Booking Payments</span>
+        <span class="badge badge-secondary">{{ room_payments|length|default:'0' }} entries</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive table-responsive-cards">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Renter</th>
+                        <th>Room</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in room_payments %}
+                    <tr>
+                        <td data-label="Date">{{ payment.payment_date|date:'d M Y' }}</td>
+                        <td data-label="Reference"><strong>{{ payment.transaction_id }}</strong></td>
+                        <td data-label="Renter">{% if payment.booking and payment.booking.user %}{{ payment.booking.user.get_full_name|default:payment.booking.user.email }}{% else %}&mdash;{% endif %}</td>
+                        <td data-label="Room">{% if payment.booking and payment.booking.room %}{{ payment.booking.room.room_number }}{% else %}&mdash;{% endif %}</td>
+                        <td data-label="Amount">৳ {{ payment.amount|floatformat:0 }}</td>
+                        <td data-label="Method">{{ payment.get_payment_method_display }}</td>
+                        <td data-label="Status"><span class="badge badge-{{ payment.status|lower }}">{{ payment.get_status_display|default:payment.status }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="empty-state">
+                                <i class="fas fa-bed"></i>
+                                <h5>No Room Payments Found</h5>
+                                <p class="text-muted">No room booking payment records match your criteria.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Meal Payments -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-utensils me-2 text-accent"></i>Meal Payments</span>
+        <span class="badge badge-primary">{{ meal_payments|length|default:'0' }} entries</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive table-responsive-cards">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Renter</th>
+                        <th>Meal Period</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in meal_payments %}
+                    <tr>
+                        <td data-label="Date">{{ payment.payment_date|date:'d M Y' }}</td>
+                        <td data-label="Reference"><strong>{{ payment.transaction_id }}</strong></td>
+                        <td data-label="Renter">{% if payment.booking and payment.booking.user %}{{ payment.booking.user.get_full_name|default:payment.booking.user.email }}{% else %}&mdash;{% endif %}</td>
+                        <td data-label="Meal Period">{% if payment.metadata.meal_bill %}Meal Bill{% else %}&mdash;{% endif %}</td>
+                        <td data-label="Amount">৳ {{ payment.amount|floatformat:0 }}</td>
+                        <td data-label="Method">{{ payment.get_payment_method_display }}</td>
+                        <td data-label="Status"><span class="badge badge-{{ payment.status|lower }}">{{ payment.get_status_display|default:payment.status }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="empty-state">
+                                <i class="fas fa-utensils"></i>
+                                <h5>No Meal Payments Found</h5>
+                                <p class="text-muted">No meal payment records match your criteria.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

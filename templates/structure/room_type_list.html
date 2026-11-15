@@ -1,0 +1,53 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Room Types - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><i class="fas fa-tags"></i> Room Types</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item active">Room Types</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'room_type_add' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Room Type</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Rooms Using</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for type in room_types %}
+                    <tr>
+                        <td class="fw-semibold"><i class="fas fa-tag me-2" style="color:var(--accent);"></i>{{ type.name }}</td>
+                        <td class="text-muted">{{ type.description|default:"-" }}</td>
+                        <td><span class="badge bg-secondary">{{ type.room_count }}</span></td>
+                        <td class="text-end table-actions">
+                            <a href="{% url 'room_type_edit' type.pk %}" class="btn btn-sm btn-icon btn-ghost" title="Edit"><i class="fas fa-edit"></i></a>
+                            {% if type.room_count == 0 %}
+                            <a href="{% url 'room_type_delete' type.pk %}" class="btn btn-sm btn-icon btn-ghost" title="Delete" style="color:var(--accent-hover);"><i class="fas fa-trash"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center py-4 text-muted">No room types defined yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

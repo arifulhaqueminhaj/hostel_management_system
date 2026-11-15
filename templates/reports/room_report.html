@@ -1,0 +1,111 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Room Report - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <h1 class="page-title"><i class="fas fa-door-open"></i>Room Report</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'report_index' %}">Reports</a></li>
+                <li class="breadcrumb-item active">Room Report</li>
+            </ol>
+        </nav>
+    </div>
+    <div>
+        <a href="{% url 'report_index' %}" class="btn btn-outline-nestora btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Reports
+        </a>
+    </div>
+</div>
+<div class="row g-4 mb-4">
+    <div class="col-xl-2 col-md-4 fade-in delay-1">
+        <div class="stat-card primary">
+            <div class="stat-icon"><i class="fas fa-door-closed"></i></div>
+            <div class="stat-value">{{ rooms|length|default:0 }}</div>
+            <div class="stat-label">Total Rooms</div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 fade-in delay-2">
+        <div class="stat-card success">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-value">{{ available_count|default:0 }}</div>
+            <div class="stat-label">Available</div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 fade-in delay-3">
+        <div class="stat-card warning">
+            <div class="stat-icon"><i class="fas fa-bookmark"></i></div>
+            <div class="stat-value">{{ booked_count|default:0 }}</div>
+            <div class="stat-label">Booked</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 fade-in delay-4">
+        <div class="stat-card info">
+            <div class="stat-icon"><i class="fas fa-user-friends"></i></div>
+            <div class="stat-value">{{ occupied_count|default:0 }}</div>
+            <div class="stat-label">Occupied</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 fade-in delay-5">
+        <div class="stat-card danger">
+            <div class="stat-icon"><i class="fas fa-tools"></i></div>
+            <div class="stat-value">{{ maintenance_count|default:0 }}</div>
+            <div class="stat-label">Maintenance</div>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-table me-2 text-accent"></i>Room Details</span>
+        <div class="dropdown">
+            <button class="btn btn-outline-nestora btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-download me-1"></i> Export
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{% url 'export_pdf' 'rooms' %}"><i class="fas fa-file-pdf me-2"></i>Export PDF</a></li>
+                <li><a class="dropdown-item" href="{% url 'export_excel' 'rooms' %}"><i class="fas fa-file-excel me-2"></i>Export Excel</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive table-responsive-cards">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Room</th>
+                        <th>Hostel</th>
+                        <th>Floor</th>
+                        <th>Beds Free</th>
+                        <th>Rent</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for room in rooms %}
+                    <tr>
+                        <td data-label="Room"><strong>{{ room.room_number }}</strong></td>
+                        <td data-label="Hostel">{{ room.hostel.name }}</td>
+                        <td data-label="Floor">{{ room.floor.display_name|default:'-' }}</td>
+                        <td data-label="Beds Free">{{ room.beds_available }}/{{ room.beds_total }}</td>
+                        <td data-label="Rent">KES {{ room.rent|floatformat:0 }}</td>
+                        <td data-label="Status"><span class="badge badge-{{ room.status|lower }}">{{ room.get_status_display|default:room.status }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="empty-state">
+                                <i class="fas fa-door-open"></i>
+                                <h5>No Rooms Found</h5>
+                                <p class="text-muted">No rooms available in the system.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

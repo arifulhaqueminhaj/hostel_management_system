@@ -1,0 +1,57 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Floors - {{ hostel.name }} - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><i class="fas fa-layer-group"></i> Floors - {{ hostel.name }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'hostel_list' %}">Hostels</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'hostel_detail' hostel.slug %}">{{ hostel.name }}</a></li>
+                <li class="breadcrumb-item active">Floors</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'floor_add' hostel.pk %}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Floor</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for floor in floors %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-layer-group me-2" style="color:var(--accent);"></i>{{ floor.display_name }}</h5>
+                    <span class="badge bg-secondary">{{ floor.unit_count }} unit{{ floor.unit_count|pluralize }}</span>
+                </div>
+                <p class="text-muted small mb-3">
+                    <i class="fas fa-door-open me-1"></i>{{ floor.room_count }} room{{ floor.room_count|pluralize }}
+                </p>
+                {% if floor.units.all %}
+                <p class="small text-muted mb-3">
+                    {% for unit in floor.units.all %}<span class="badge badge-available me-1">{{ unit.name }}</span>{% endfor %}
+                </p>
+                {% endif %}
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'unit_list' floor.pk %}" class="btn btn-sm btn-outline-nestora"><i class="fas fa-th-large"></i> Units</a>
+                    <a href="{% url 'floor_edit' floor.pk %}" class="btn btn-sm btn-ghost"><i class="fas fa-edit"></i> Edit</a>
+                    <a href="{% url 'floor_delete' floor.pk %}" class="btn btn-sm btn-ghost" style="color:var(--accent-hover);"><i class="fas fa-trash"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card"><div class="card-body text-center py-5 text-muted">
+            <i class="fas fa-layer-group mb-3" style="font-size:3rem;"></i>
+            <p>No floors yet. Add the first floor to start building the structure.</p>
+            <a href="{% url 'floor_add' hostel.pk %}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Floor</a>
+        </div></div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

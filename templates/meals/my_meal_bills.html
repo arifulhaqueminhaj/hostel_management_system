@@ -1,0 +1,264 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}My Meal Bills - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item active">My Meal Bills</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-receipt"></i> My Meal Bills</h1>
+    </div>
+</div>
+
+{% if not booking %}
+<div class="card fade-in">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-utensils fa-3x mb-3" style="color:var(--text-muted);opacity:0.3;"></i>
+        <h5>No Active Meal Service</h5>
+        <p class="text-muted">You don't have an active booking with meal service enabled.</p>
+        <a href="{% url 'search_rooms' %}" class="btn btn-nestora mt-3"><i class="fas fa-search me-1"></i>Find a Room</a>
+    </div>
+</div>
+{% else %}
+
+<!-- Today's Meal Summary -->
+<div class="card fade-in mb-4">
+    <div class="card-header">
+        <span><i class="fas fa-calendar-day"></i> Today's Meal Summary ({{ today_bill.date|default:today|date:"l, F j, Y" }})</span>
+    </div>
+    <div class="card-body">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="p-3 rounded text-center" style="background:rgba(255,193,7,0.1);">
+                    <h5 class="fw-bold mb-1" style="color:#ffc107;">{% if today_meals.breakfast.chargeable %}৳{{ today_meals.breakfast.amount|floatformat:0 }}{% else %}<span class="text-muted">—</span>{% endif %}</h5>
+                    <small class="text-muted">Breakfast</small>
+                    <div class="mt-1">
+                        <span class="badge {% if today_meals.breakfast.status == 'on' %}badge-success{% else %}badge-secondary{% endif %}">
+                            {{ today_meals.breakfast.status|upper }}
+                        </span>
+                        {% if today_meals.breakfast.locked %}<i class="fas fa-lock ms-1" style="font-size:0.6rem;"></i>{% else %}<i class="fas fa-hourglass-half ms-1" title="Pending cut-off" style="font-size:0.6rem;"></i>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 rounded text-center" style="background:rgba(13,202,240,0.1);">
+                    <h5 class="fw-bold mb-1" style="color:#0dcaf0;">{% if today_meals.lunch.chargeable %}৳{{ today_meals.lunch.amount|floatformat:0 }}{% else %}<span class="text-muted">—</span>{% endif %}</h5>
+                    <small class="text-muted">Lunch</small>
+                    <div class="mt-1">
+                        <span class="badge {% if today_meals.lunch.status == 'on' %}badge-success{% else %}badge-secondary{% endif %}">
+                            {{ today_meals.lunch.status|upper }}
+                        </span>
+                        {% if today_meals.lunch.locked %}<i class="fas fa-lock ms-1" style="font-size:0.6rem;"></i>{% else %}<i class="fas fa-hourglass-half ms-1" title="Pending cut-off" style="font-size:0.6rem;"></i>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 rounded text-center" style="background:rgba(108,92,231,0.1);">
+                    <h5 class="fw-bold mb-1" style="color:#6c5ce7;">{% if today_meals.dinner.chargeable %}৳{{ today_meals.dinner.amount|floatformat:0 }}{% else %}<span class="text-muted">—</span>{% endif %}</h5>
+                    <small class="text-muted">Dinner</small>
+                    <div class="mt-1">
+                        <span class="badge {% if today_meals.dinner.status == 'on' %}badge-success{% else %}badge-secondary{% endif %}">
+                            {{ today_meals.dinner.status|upper }}
+                        </span>
+                        {% if today_meals.dinner.locked %}<i class="fas fa-lock ms-1" style="font-size:0.6rem;"></i>{% else %}<i class="fas fa-hourglass-half ms-1" title="Pending cut-off" style="font-size:0.6rem;"></i>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 rounded text-center" style="background:rgba(255,107,107,0.1);">
+                    <h5 class="fw-bold mb-1" style="color:#ff6b6b;">৳{{ chargeable_total|floatformat:0 }}</h5>
+                    <small class="text-muted">Today's Total</small>
+                    <div class="mt-1">
+                        {% if today_is_paid %}
+                        <span class="badge badge-success"><i class="fas fa-check-circle me-1"></i>Paid</span>
+                        {% elif chargeable_total > 0 %}
+                        <span class="badge {{ today_badge }}"><i class="fas fa-clock me-1"></i>{{ today_status }}</span>
+                        {% else %}
+                        <span class="badge badge-secondary"><i class="fas fa-minus-circle me-1"></i>No Charge Yet</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if chargeable_total > 0 and not today_is_paid %}
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            {% if today_bill %}
+                {% if today_status == 'Payment Pending' %}
+                <span class="badge badge-warning fs-6 px-3 py-2 align-self-center"><i class="fas fa-clock me-1"></i>Payment Pending</span>
+                {% else %}
+                <a href="{% url 'meal_pay' today_bill.pk %}" class="btn btn-nestora btn-lg">
+                    <i class="fas fa-credit-card me-2"></i>Pay Today ৳{{ today_bill.total_amount|floatformat:0 }}
+                </a>
+                {% endif %}
+            {% else %}
+            <span class="badge badge-secondary fs-6 px-3 py-2 align-self-center">
+                <i class="fas fa-lock me-1"></i>Payable after today's meal cutoff
+            </span>
+            {% endif %}
+        </div>
+        {% elif today_is_paid %}
+        <div class="text-end">
+            <span class="badge badge-success fs-6 px-3 py-2"><i class="fas fa-check-circle me-1"></i>Today's Meals Paid</span>
+        </div>
+        {% elif chargeable_total == 0 %}
+        <div class="text-end">
+            <span class="badge badge-secondary fs-6 px-3 py-2">No meal charges yet today</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Outstanding Daily Bills -->
+{% if outstanding_bills %}
+<div class="card fade-in mb-4 {% if total_unpaid > 0 %}border-danger{% endif %}">
+    <div class="card-header {% if total_unpaid > 0 %}bg-danger text-white{% endif %}">
+        <span><i class="fas fa-hourglass-half"></i> Outstanding Daily Bills</span>
+    </div>
+    <div class="card-body">
+        <div class="row align-items-center mb-3">
+            <div class="col-md-4 text-center">
+                {% if total_unpaid > 0 %}
+                <h2 class="fw-bold mb-1" style="color:#dc3545;">৳{{ total_unpaid|floatformat:0 }}</h2>
+                <p class="text-muted mb-0">Total unpaid</p>
+                {% else %}
+                <h2 class="fw-bold mb-1" style="color:#28a745;">৳0</h2>
+                <p class="text-muted mb-0">Nothing payable yet</p>
+                {% endif %}
+            </div>
+            <div class="col-md-8">
+                <div class="small text-muted mb-2">
+                    <i class="fas fa-info-circle me-1"></i>Each day you eat a meal is billed the same day and can be paid right away. Pay each day's bill individually as it becomes due.
+                </div>
+                {% for bill in outstanding_bills %}
+                <div class="d-flex justify-content-between align-items-center border rounded p-2 mb-2">
+                    <div>
+                        <span class="fw-semibold">{{ bill.date|date:"D, M j, Y" }}</span>
+                        <span class="text-muted ms-2">৳{{ bill.total_amount|floatformat:0 }}</span>
+                        <span class="badge {{ bill.payment_badge }} ms-2">{{ bill.payment_status }}</span>
+                    </div>
+                    <div class="text-end">
+                        <a href="{% url 'meal_pay' bill.pk %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-credit-card me-1"></i>Pay ৳{{ bill.total_amount|floatformat:0 }}
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Meal Bills -->
+<div class="card fade-in delay-1">
+    <div class="card-header">
+        <span><i class="fas fa-history"></i> Recent Meal Bills (Last 7 Days)</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th class="text-center">Breakfast</th>
+                        <th class="text-center">Lunch</th>
+                        <th class="text-center">Dinner</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bill in recent_bills %}
+                    <tr {% if bill.date == today %}class="table-active"{% endif %}>
+                        <td>
+                            <div class="fw-semibold">{{ bill.date|date:"D, M d" }}</div>
+                            {% if bill.date == today %}<span class="badge badge-success">Today</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if bill.total_breakfasts > 0 %}
+                                <span class="badge badge-success">৳{{ bill.breakfast_amount|floatformat:0 }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if bill.total_lunches > 0 %}
+                                <span class="badge badge-info">৳{{ bill.lunch_amount|floatformat:0 }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if bill.total_dinners > 0 %}
+                                <span class="badge" style="background:rgba(108,92,231,0.1);color:#6c5ce7;">৳{{ bill.dinner_amount|floatformat:0 }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end fw-bold">
+                            {% if bill.total_amount > 0 %}
+                                ৳{{ bill.total_amount }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if bill.is_paid %}
+                            <span class="badge badge-success"><i class="fas fa-check-circle me-1"></i>Paid</span>
+                            {% elif bill.total_amount > 0 %}
+                            <span class="badge {{ bill.payment_badge }}"><i class="fas fa-clock me-1"></i>{{ bill.payment_status }}</span>
+                            {% else %}
+                            <span class="badge badge-secondary">No Charge</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if bill.is_paid %}
+                            <a href="{% url 'meal_bill_detail' bill.pk %}" class="btn btn-outline-nestora btn-sm">
+                                <i class="fas fa-eye me-1"></i>View
+                            </a>
+                            {% elif bill.total_amount > 0 %}
+                            <a href="{% url 'meal_pay' bill.pk %}" class="btn btn-nestora btn-sm">
+                                <i class="fas fa-credit-card me-1"></i>Pay ৳{{ bill.total_amount|floatformat:0 }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No meal bills found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showToast(message, type) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: type === 'success' ? 'success' : 'error',
+            title: type === 'success' ? 'Success!' : 'Error!',
+            text: message,
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end',
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,74 @@
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="height:70px;background:rgba(10,14,39,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.06);z-index:1040;">
+    <div class="container-fluid px-4">
+        {% if user.is_authenticated %}
+            <button class="navbar-toggler border-0" type="button" id="sidebarToggle" aria-label="Toggle sidebar" style="font-size:1.25rem;color:rgba(255,255,255,0.7);padding:0.25rem 0.5rem;">
+                <i class="fas fa-bars"></i>
+            </button>
+        {% endif %}
+
+        <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{% url 'index' %}" style="font-size:1.25rem;letter-spacing:0.5px;">
+            <i class="fas fa-building" style="color:#ff6b6b;font-size:1.2rem;"></i>
+            {{ nestora_name }}
+        </a>
+
+        {% if user.is_authenticated %}
+            <div class="d-none d-md-flex align-items-center mx-auto" style="flex:1;max-width:420px;position:relative;">
+                <i class="fas fa-search" style="position:absolute;left:1rem;color:rgba(255,255,255,0.4);font-size:0.85rem;z-index:5;"></i>
+                <input type="text" class="form-control" placeholder="Search rooms, tenants, invoices..." style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:50px;padding-left:2.5rem;padding-right:1.25rem;height:38px;color:#fff;font-size:0.875rem;outline:none;box-shadow:none;">
+            </div>
+        {% endif %}
+
+        <button class="navbar-toggler border-0 d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" style="font-size:1.25rem;color:rgba(255,255,255,0.7);padding:0.25rem 0.5rem;">
+            <i class="fas fa-ellipsis-v"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav align-items-lg-center gap-1" style="margin-left:auto;">
+                {% if user.is_authenticated %}
+                    <li class="nav-item d-md-none py-2" style="position:relative;">
+                        <i class="fas fa-search" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);font-size:0.85rem;z-index:5;"></i>
+                        <input type="text" class="form-control" placeholder="Search rooms, tenants, invoices..." style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:50px;padding-left:2.5rem;padding-right:1.25rem;height:38px;color:#fff;font-size:0.875rem;">
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link position-relative d-flex align-items-center justify-content-center" href="#" style="width:40px;height:40px;color:rgba(255,255,255,0.6);font-size:1.2rem;border-radius:50%;transition:all 0.2s;">
+                            <i class="fas fa-bell"></i>
+                            <span style="position:absolute;top:6px;right:4px;width:8px;height:8px;border-radius:50%;background:#ff6b6b;"></span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding:0.25rem 0.5rem;">
+                            <span style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ff6b6b,#ee5a24);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;color:#fff;flex-shrink:0;">
+                                {{ user_initial }}
+                            </span>
+                            <span class="d-none d-lg-inline" style="font-size:0.875rem;color:rgba(255,255,255,0.85);font-weight:500;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                {{ user.full_name|default:user.email }}
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" style="background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);padding:0.5rem;margin-top:0.5rem;min-width:200px;">
+                            <li><a class="dropdown-item" href="{% url 'profile' %}" style="color:rgba(255,255,255,0.8);border-radius:8px;padding:0.5rem 0.75rem;font-size:0.875rem;transition:all 0.15s;"><i class="fas fa-user me-2" style="width:18px;color:#ff6b6b;"></i>Profile</a></li>
+                            <li><hr class="dropdown-divider" style="border-color:rgba(255,255,255,0.08);margin:0.25rem 0;"></li>
+                            {% if user_role == 'SUPER_ADMIN' or user_role == 'MANAGER' %}
+                                <li><a class="dropdown-item" href="{% url 'dashboard_home' %}" style="color:rgba(255,255,255,0.8);border-radius:8px;padding:0.5rem 0.75rem;font-size:0.875rem;transition:all 0.15s;"><i class="fas fa-tachometer-alt me-2" style="width:18px;color:#ff6b6b;"></i>Dashboard</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider" style="border-color:rgba(255,255,255,0.08);margin:0.25rem 0;"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}" style="color:#ff6b6b;border-radius:8px;padding:0.5rem 0.75rem;font-size:0.875rem;transition:all 0.15s;"><i class="fas fa-sign-out-alt me-2" style="width:18px;"></i>Logout</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}" style="color:rgba(255,255,255,0.7);font-size:0.875rem;padding:0.5rem 1rem;border-radius:8px;transition:all 0.2s;">
+                            <i class="fas fa-sign-in-alt me-1"></i> Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}" style="background:#ff6b6b;color:#fff;font-size:0.875rem;font-weight:600;padding:0.5rem 1.25rem;border-radius:8px;transition:all 0.2s;">
+                            <i class="fas fa-user-plus me-1"></i> Register
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

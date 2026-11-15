@@ -1,0 +1,78 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Reports - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <h1 class="page-title"><i class="fas fa-chart-bar"></i>Reports</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item active">Reports</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-md-6 col-lg-4 fade-in delay-1">
+        <div class="card h-100">
+            <div class="card-body text-center p-4">
+                <div class="mb-3" style="font-size:2.5rem;color:var(--accent);"><i class="fas fa-calendar-alt"></i></div>
+                <h5 class="fw-bold">Booking Report</h5>
+                <p class="text-muted small mb-3">View and analyze booking trends, occupancy rates, and reservation summaries.</p>
+                <a href="{% url 'booking_report' %}" class="btn btn-nestora btn-sm w-100">
+                    <i class="fas fa-eye me-1"></i> View Report
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4 fade-in delay-2">
+        <div class="card h-100">
+            <div class="card-body text-center p-4">
+                <div class="mb-3" style="font-size:2.5rem;color:#198754;"><i class="fas fa-credit-card"></i></div>
+                <h5 class="fw-bold">Payment Report</h5>
+                <p class="text-muted small mb-3">Track payment collections, transaction methods, and revenue inflow.</p>
+                <a href="{% url 'payment_report' %}" class="btn btn-nestora btn-sm w-100">
+                    <i class="fas fa-eye me-1"></i> View Report
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4 fade-in delay-3">
+        <div class="card h-100">
+            <div class="card-body text-center p-4">
+                <div class="mb-3" style="font-size:2.5rem;color:#e65100;"><i class="fas fa-door-open"></i></div>
+                <h5 class="fw-bold">Room Report</h5>
+                <p class="text-muted small mb-3">Monitor room availability, occupancy status, and maintenance scheduling.</p>
+                <a href="{% url 'room_report' %}" class="btn btn-nestora btn-sm w-100">
+                    <i class="fas fa-eye me-1"></i> View Report
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4 fade-in delay-4">
+        <div class="card h-100">
+            <div class="card-body text-center p-4">
+                <div class="mb-3" style="font-size:2.5rem;color:#dc3545;"><i class="fas fa-exclamation-circle"></i></div>
+                <h5 class="fw-bold">Complaint Report</h5>
+                <p class="text-muted small mb-3">Analyze complaint categories, resolution times, and status distribution.</p>
+                <a href="{% url 'complaint_report' %}" class="btn btn-nestora btn-sm w-100">
+                    <i class="fas fa-eye me-1"></i> View Report
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4 fade-in delay-5">
+        <div class="card h-100">
+            <div class="card-body text-center p-4">
+                <div class="mb-3" style="font-size:2.5rem;color:#00897b;"><i class="fas fa-chart-line"></i></div>
+                <h5 class="fw-bold">Revenue Report</h5>
+                <p class="text-muted small mb-3">View revenue breakdown, trends, and financial summaries.</p>
+                <a href="{% url 'revenue_report' %}" class="btn btn-nestora btn-sm w-100">
+                    <i class="fas fa-eye me-1"></i> View Report
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

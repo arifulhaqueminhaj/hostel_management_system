@@ -1,0 +1,140 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Find Your Room - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item active">Find Your Room</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-search"></i>Find Your Room</h1>
+    </div>
+</div>
+
+<div class="card fade-in mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label"><i class="fas fa-calendar-plus me-1 text-accent"></i>Check In</label>
+                <input type="date" name="check_in" class="form-control" value="{{ check_in }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><i class="fas fa-calendar-minus me-1 text-accent"></i>Check Out</label>
+                <input type="date" name="check_out" class="form-control" value="{{ check_out }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label"><i class="fas fa-layer-group me-1 text-accent"></i>Floor</label>
+                <select name="floor" class="form-select">
+                    <option value="">All Floors</option>
+                    {% for floor in floors %}
+                    <option value="{{ floor.id }}" {% if request.GET.floor == floor.id|stringformat:'s' %}selected{% endif %}>{{ floor.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label"><i class="fas fa-tag me-1 text-accent"></i>Room Type</label>
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for rt in room_types %}
+                    <option value="{{ rt.id }}" {% if request.GET.type == rt.id|stringformat:'s' %}selected{% endif %}>{{ rt.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><i class="fas fa-search me-1 text-accent"></i>Search</label>
+                <input type="text" name="q" class="form-control" placeholder="Room number, type..." value="{{ query }}">
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-nestora w-100"><i class="fas fa-search me-1"></i>Find</button>
+                <a href="{% url 'search_rooms' %}" class="btn btn-ghost w-100"><i class="fas fa-undo me-1"></i>Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if rooms %}
+<div class="d-flex justify-content-between align-items-center mb-3 fade-in">
+    <h5 class="fw-bold mb-0"><i class="fas fa-door-open me-2 text-accent"></i>Available Rooms</h5>
+    <span class="badge badge-success fs-6">{{ rooms|length }} room{{ rooms|length|pluralize }} found</span>
+</div>
+<div class="row g-3">
+    {% for room in rooms %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border">
+            {% if room.image %}
+            <img src="{{ room.image.url }}" class="card-img-top" alt="Room {{ room.room_number }}" style="height: 140px; object-fit: cover;">
+            {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 140px;">
+                <i class="fas fa-bed text-muted" style="font-size: 2.5rem; opacity: 0.3;"></i>
+            </div>
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+                <h6 class="fw-bold mb-1">Room {{ room.room_number }}</h6>
+<div class="d-flex flex-wrap gap-2 mb-2 small text-muted">
+    <span><i class="fas fa-bed me-1"></i>{{ room.beds_free_annotated }} bed{{ room.beds_free_annotated|pluralize }} free</span>
+    <span><i class="fas fa-layer-group me-1"></i>{{ room.unit.floor.display_name }} &middot; Unit {{ room.unit.name }}</span>
+    {% if room.room_type %}<span><i class="fas fa-tag me-1"></i>{{ room.room_type.name }}</span>{% endif %}
+</div>
+                <p class="fw-bold fs-5 text-accent mb-3">{{ settings.NESTORA_CURRENCY|default:'৳' }}{{ room.rent }}<small class="text-muted fw-normal fs-6">/month</small></p>
+                <a href="{% url 'room_detail' room.pk %}?check_in={{ check_in }}&check_out={{ check_out }}" class="btn btn-outline-nestora btn-sm w-100 mb-1">
+                    <i class="fas fa-eye me-1"></i>View Room
+                </a>
+                <a href="{% url 'create_booking' room.pk %}?check_in={{ check_in }}&check_out={{ check_out }}" class="btn btn-nestora btn-sm w-100">
+                    <i class="fas fa-calendar-check me-1"></i>Book Now
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-3 text-muted">
+        <i class="fas fa-door-open me-1"></i>No rooms available for the selected criteria.
+    </div>
+    {% endfor %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="mt-4 d-flex justify-content-center" aria-label="Room pagination">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page=1&check_in={{ check_in }}&check_out={{ check_out }}&floor={{ selected_floor }}&unit={{ selected_unit }}&type={{ selected_type }}&min_price={{ min_price }}&max_price={{ max_price }}&q={{ query }}"><i class="fas fa-angle-double-left"></i></a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&check_in={{ check_in }}&check_out={{ check_out }}&floor={{ selected_floor }}&unit={{ selected_unit }}&type={{ selected_type }}&min_price={{ min_price }}&max_price={{ max_price }}&q={{ query }}"><i class="fas fa-angle-left"></i></a></li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link"><i class="fas fa-angle-double-left"></i></span></li>
+        <li class="page-item disabled"><span class="page-link"><i class="fas fa-angle-left"></i></span></li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item"><a class="page-link" href="?page={{ num }}&check_in={{ check_in }}&check_out={{ check_out }}&floor={{ selected_floor }}&unit={{ selected_unit }}&type={{ selected_type }}&min_price={{ min_price }}&max_price={{ max_price }}&q={{ query }}">{{ num }}</a></li>
+        {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&check_in={{ check_in }}&check_out={{ check_out }}&floor={{ selected_floor }}&unit={{ selected_unit }}&type={{ selected_type }}&min_price={{ min_price }}&max_price={{ max_price }}&q={{ query }}"><i class="fas fa-angle-right"></i></a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&check_in={{ check_in }}&check_out={{ check_out }}&floor={{ selected_floor }}&unit={{ selected_unit }}&type={{ selected_type }}&min_price={{ min_price }}&max_price={{ max_price }}&q={{ query }}"><i class="fas fa-angle-double-right"></i></a></li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link"><i class="fas fa-angle-right"></i></span></li>
+        <li class="page-item disabled"><span class="page-link"><i class="fas fa-angle-double-right"></i></span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% elif request.GET %}
+<div class="empty-state fade-in">
+    <i class="fas fa-door-open"></i>
+    <h5>No Rooms Available</h5>
+    <p>No rooms match your search criteria. Try different dates or filters.</p>
+    <a href="{% url 'search_rooms' %}" class="btn btn-ghost mt-2"><i class="fas fa-undo me-1"></i>Clear Filters</a>
+</div>
+{% else %}
+<div class="empty-state fade-in">
+    <i class="fas fa-arrow-up"></i>
+    <h5>Find Your Room</h5>
+    <p>Select your check-in and check-out dates above to find available rooms.</p>
+</div>
+{% endif %}
+{% endblock %}

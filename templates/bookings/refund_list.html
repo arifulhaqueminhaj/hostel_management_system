@@ -1,0 +1,120 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Refunds - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item active">Refunds</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-money-bill-wave"></i>Refunds</h1>
+    </div>
+</div>
+
+<div class="card fade-in mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label"><i class="fas fa-filter me-1 text-accent"></i>Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="failed" {% if selected_status == 'failed' %}selected{% endif %}>Failed</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-nestora"><i class="fas fa-search me-1"></i>Filter</button>
+                <a href="{% url 'refund_list' %}" class="btn btn-ghost"><i class="fas fa-undo me-1"></i>Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card fade-in delay-1">
+    <div class="table-responsive table-responsive-cards">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Booking</th>
+                    <th>Renter</th>
+                    <th>Original</th>
+                    <th>Fee</th>
+                    <th>Refund</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for refund in page_obj %}
+                <tr>
+                    <td data-label="#">{{ forloop.counter0|add:page_obj.start_index }}</td>
+                    <td data-label="Booking">
+                        <a href="{% url 'booking_detail' refund.cancellation.booking.pk %}" class="fw-bold text-decoration-none">
+                            {{ refund.cancellation.booking.booking_reference }}
+                        </a>
+                    </td>
+                    <td data-label="Renter">{{ refund.cancellation.booking.user.get_full_name|default:refund.cancellation.booking.user.email }}</td>
+                    <td data-label="Original">${{ refund.payment.amount }}</td>
+                    <td data-label="Fee" class="text-danger">${{ refund.cancellation.cancellation_fee }}</td>
+                    <td data-label="Refund" class="fw-bold" style="color:var(--accent);">${{ refund.amount }}</td>
+                    <td data-label="Status">
+                        {% if refund.status == 'pending' %}
+                        <span class="badge badge-pending">Pending</span>
+                        {% elif refund.status == 'completed' %}
+                        <span class="badge badge-success">Completed</span>
+                        {% elif refund.status == 'failed' %}
+                        <span class="badge badge-danger">Rejected</span>
+                        {% else %}
+                        <span class="badge badge-occupied">{{ refund.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Date">{{ refund.created_at|date:"M d, Y" }}</td>
+                    <td data-label="Actions" class="text-end table-actions">
+                        {% if refund.status == 'pending' %}
+                        <a href="{% url 'process_refund' refund.pk %}" class="btn btn-sm btn-nestora">
+                            <i class="fas fa-gavel me-1"></i>Process
+                        </a>
+                        {% else %}
+                        <a href="{% url 'booking_detail' refund.cancellation.booking.pk %}" class="btn btn-icon btn-ghost" title="View Booking">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center py-5">
+                        <div class="empty-state">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <h5>No Refunds</h5>
+                            <p>No refund records found.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if page_obj.has.paginator %}
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <small class="text-muted">Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }}</small>
+        <nav>
+            <ul class="pagination mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}"><i class="fas fa-angle-left"></i></a></li>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}"><i class="fas fa-angle-right"></i></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

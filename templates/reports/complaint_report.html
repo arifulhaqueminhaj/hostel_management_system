@@ -1,0 +1,141 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Complaint Report - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <h1 class="page-title"><i class="fas fa-exclamation-circle"></i>Complaint Report</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'report_index' %}">Reports</a></li>
+                <li class="breadcrumb-item active">Complaint Report</li>
+            </ol>
+        </nav>
+    </div>
+    <div>
+        <a href="{% url 'report_index' %}" class="btn btn-outline-nestora btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Reports
+        </a>
+    </div>
+</div>
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Priority</label>
+                <select name="priority" class="form-select">
+                    <option value="">All</option>
+                    <option value="low" {% if request.GET.priority == 'low' %}selected{% endif %}>Low</option>
+                    <option value="medium" {% if request.GET.priority == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="high" {% if request.GET.priority == 'high' %}selected{% endif %}>High</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="resolved" {% if request.GET.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">From Date</label>
+                <input type="date" name="from" class="form-control" value="{{ request.GET.from|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To Date</label>
+                <input type="date" name="to" class="form-control" value="{{ request.GET.to|default:'' }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-nestora"><i class="fas fa-filter me-1"></i> Apply Filter</button>
+                <a href="{% url 'complaint_report' %}" class="btn btn-ghost">Reset</a>
+                <div class="dropdown float-end">
+                    <button class="btn btn-outline-nestora dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-download me-1"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'export_pdf' 'complaints' %}"><i class="fas fa-file-pdf me-2"></i>Export PDF</a></li>
+                        <li><a class="dropdown-item" href="{% url 'export_excel' 'complaints' %}"><i class="fas fa-file-excel me-2"></i>Export Excel</a></li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6 fade-in delay-1">
+        <div class="stat-card primary">
+            <div class="stat-icon"><i class="fas fa-list"></i></div>
+            <div class="stat-value">{{ total_count|default:0 }}</div>
+            <div class="stat-label">Total Complaints</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 fade-in delay-2">
+        <div class="stat-card warning">
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-value">{{ pending_count|default:0 }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 fade-in delay-3">
+        <div class="stat-card info">
+            <div class="stat-icon"><i class="fas fa-spinner"></i></div>
+            <div class="stat-value">{{ in_progress_count|default:0 }}</div>
+            <div class="stat-label">In Progress</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 fade-in delay-4">
+        <div class="stat-card success">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-value">{{ resolved_count|default:0 }}</div>
+            <div class="stat-label">Resolved</div>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-list me-2 text-accent"></i>Complaint Records</span>
+        <span class="badge badge-info">{{ complaints|length|default:'0' }} entries</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive table-responsive-cards">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Renter</th>
+                        <th>Room</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for complaint in complaints %}
+                    <tr>
+                        <td data-label="Subject">{{ complaint.title|default:complaint.subject }}</td>
+                        <td data-label="Renter">{{ complaint.user.get_full_name|default:complaint.user.email }}</td>
+                        <td data-label="Room">{{ complaint.room.room_number }}</td>
+                        <td data-label="Priority"><span class="badge badge-{{ complaint.priority|lower }}">{{ complaint.get_priority_display|default:complaint.priority }}</span></td>
+                        <td data-label="Status"><span class="badge badge-{{ complaint.status|lower }}">{{ complaint.get_status_display|default:complaint.status }}</span></td>
+                        <td data-label="Date">{{ complaint.created_at|date:'d M Y' }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="empty-state">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <h5>No Complaints Found</h5>
+                                <p class="text-muted">No complaint records match your criteria.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

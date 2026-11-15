@@ -1,0 +1,169 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}My Dashboard - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <h1 class="page-title"><i class="fas fa-tachometer-alt"></i>Welcome, {{ user.full_name|default:user.email }}!</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item active">Dashboard</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-xl-3 col-md-6 mb-4 fade-in delay-1">
+        <div class="stat-card primary">
+            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-value">{{ total_bookings|default:0 }}</div>
+            <div class="stat-label">My Bookings</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4 fade-in delay-2">
+        <div class="stat-card success">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-value">{{ active_bookings|default:0 }}</div>
+            <div class="stat-label">Active Bookings</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4 fade-in delay-3">
+        <div class="stat-card info">
+            <div class="stat-icon"><i class="fas fa-credit-card"></i></div>
+            <div class="stat-value">{{ total_payments|default:0 }}</div>
+            <div class="stat-label">Payments Made</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4 fade-in delay-4">
+        <div class="stat-card danger">
+            <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="stat-value">{{ pending_complaints|default:0 }}</div>
+            <div class="stat-label">Pending Complaints</div>
+        </div>
+    </div>
+</div>
+
+{% if active_booking %}
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card border-accent">
+            <div class="card-header bg-accent text-white">
+                <span><i class="fas fa-bed me-2"></i>Current Assignment</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <div class="text-muted small">Hostel</div>
+                        <div class="fw-bold">{{ active_booking.room.hostel.name }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small">Room</div>
+                        <div class="fw-bold">{{ active_booking.room.room_number }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small">Bed</div>
+                        <div class="fw-bold">{{ active_booking.bed.bed_number|default:"Not assigned" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <span><i class="fas fa-calendar-alt me-2 text-accent"></i>My Recent Bookings</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive table-responsive-cards">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Room</th>
+                                <th>Hostel</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings|slice:":10" %}
+                            <tr>
+                                <td data-label="Reference"><strong>{{ booking.reference }}</strong></td>
+                                <td data-label="Room">{{ booking.room.room_number }}</td>
+                                <td data-label="Hostel">{{ booking.room.hostel.name }}</td>
+                                <td data-label="Amount">KES {{ booking.amount|floatformat:0 }}</td>
+                                <td data-label="Status"><span class="badge badge-{{ booking.status|lower }}">{{ booking.get_status_display }}</span></td>
+                                <td data-label="Date">{{ booking.created_at|date:"d M Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <h5>No Bookings Yet</h5>
+                                        <p class="text-muted">You haven't made any bookings.</p>
+                                        <a href="{% url 'search_rooms' %}" class="btn btn-nestora btn-sm mt-2">Book a Room</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <span><i class="fas fa-credit-card me-2 text-accent"></i>My Recent Payments</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive table-responsive-cards">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Booking</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments|slice:":10" %}
+                            <tr>
+                                <td data-label="Reference"><strong>{{ payment.reference }}</strong></td>
+                                <td data-label="Booking">{{ payment.booking.reference }}</td>
+                                <td data-label="Amount">KES {{ payment.amount|floatformat:0 }}</td>
+                                <td data-label="Method">{{ payment.payment_method }}</td>
+                                <td data-label="Status"><span class="badge badge-{{ payment.status|lower }}">{{ payment.get_status_display }}</span></td>
+                                <td data-label="Date">{{ payment.created_at|date:"d M Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-credit-card"></i>
+                                        <h5>No Payments Yet</h5>
+                                        <p class="text-muted">You haven't made any payments.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Edit Booking - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'all_bookings' %}">All Bookings</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'booking_detail' booking.pk %}">{{ booking.booking_reference }}</a></li>
+                <li class="breadcrumb-item active">Edit</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-edit"></i>Edit Booking</h1>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card fade-in">
+            <div class="card-header">
+                <span><i class="fas fa-file-invoice me-2 text-accent"></i>Booking Details</span>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                      <div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-door-open me-1 text-accent"></i>Room</label>
+                        {{ form.room }}
+                        {% if form.room.errors %}<div class="invalid-feedback d-block">{{ form.room.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-calendar-day me-1 text-accent"></i>Check In Date</label>
+                        {{ form.check_in }}
+                        {% if form.check_in.errors %}<div class="invalid-feedback d-block">{{ form.check_in.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-calendar-week me-1 text-accent"></i>Check Out Date</label>
+                        {{ form.check_out }}
+                        {% if form.check_out.errors %}<div class="invalid-feedback d-block">{{ form.check_out.errors }}</div>{% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-nestora btn-lg w-100 mt-3">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card fade-in delay-1">
+            <div class="card-header">
+                <span><i class="fas fa-receipt me-2 text-accent"></i>Current Booking</span>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted fw-semibold">Reference</td>
+                        <td class="text-end fw-bold">{{ booking.booking_reference }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Renter</td>
+                        <td class="text-end">{{ booking.user.get_full_name|default:booking.user.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Room</td>
+                        <td class="text-end">{{ booking.room.room_number }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Status</td>
+                        <td class="text-end"><span class="badge badge-{{ booking.status }}">{{ booking.status|title }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Total</td>
+                        <td class="text-end fw-bold text-accent">{{ settings.NESTORA_CURRENCY|default:'$' }}{{ booking.total_amount }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

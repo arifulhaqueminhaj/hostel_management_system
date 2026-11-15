@@ -1,0 +1,237 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}My Meals - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item active">My Meals</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-utensils"></i> Meal Dashboard</h1>
+    </div>
+</div>
+
+{% if not booking %}
+<div class="card fade-in">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-utensils fa-3x mb-3" style="color:var(--text-muted);opacity:0.3;"></i>
+        <h5>No Active Meal Service</h5>
+        <p class="text-muted">You don't have an active booking with meal service enabled.</p>
+    </div>
+</div>
+{% else %}
+<div class="card fade-in mb-4">
+    <div class="card-header">
+        <span><i class="fas fa-info-circle"></i> {{ booking.room.hostel.name }} — Active Booking</span>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <p class="mb-1 text-muted small">Room</p>
+                <p class="fw-semibold">{{ booking.room.room_number }}</p>
+            </div>
+            <div class="col-md-4">
+                <p class="mb-1 text-muted small">Bed</p>
+                <p class="fw-semibold">{{ booking.bed.bed_number }}</p>
+            </div>
+            <div class="col-md-4">
+                <p class="mb-1 text-muted small">Default Meal Status</p>
+                <p class="fw-semibold">{{ settings.get_default_status_display }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in delay-1">
+    <div class="card-header">
+        <span><i class="fas fa-calendar-week"></i> 7-Day Meal Schedule</span>
+        <small class="text-muted ms-2">Toggle On/Off before cutoff ({{ settings.cutoff_hours }}h before meal time)</small>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th class="text-center">Breakfast<br><small>৳{{ settings.rate_breakfast }}</small></th>
+                        <th class="text-center">Lunch<br><small>৳{{ settings.rate_lunch }}</small></th>
+                        <th class="text-center">Dinner<br><small>৳{{ settings.rate_dinner }}</small></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in calendar_data %}
+                    <tr {% if day.is_today %}class="table-active"{% endif %}>
+                        <td>
+                            <div class="fw-semibold">{{ day.date|date:"D, M d" }}</div>
+                            {% if day.is_today %}<span class="badge badge-success">Today</span>{% endif %}
+                        </td>
+{% for mt, info in day.meals.items %}
+                        <td class="text-center">
+                            {% if info.locked %}
+                                <span class="badge {% if info.status == 'on' %}badge-success{% else %}badge-secondary{% endif %}">
+                                    {{ info.status|upper }}
+                                    <i class="fas fa-lock ms-1" style="font-size:0.65rem;"></i>
+                                </span>
+                            {% else %}
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" 
+                                            class="btn btn-sm {% if info.status == 'on' %}btn-primary{% else %}btn-outline-secondary{% endif %} meal-btn-on"
+                                            data-pref-id="{{ info.pref.id }}"
+                                            data-meal-type="{{ mt }}"
+                                            data-action="on">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-sm {% if info.status == 'off' %}btn-danger{% else %}btn-outline-secondary{% endif %} meal-btn-off"
+                                            data-pref-id="{{ info.pref.id }}"
+                                            data-meal-type="{{ mt }}"
+                                            data-action="off">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Meal toggle buttons
+    document.querySelectorAll('.meal-btn-on, .meal-btn-off').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const prefId = this.dataset.prefId;
+            const action = this.dataset.action;
+            const mealType = this.dataset.mealType;
+            
+            if (!prefId) return;
+            
+            const btnGroup = this.closest('.btn-group');
+            const btnOn = btnGroup.querySelector('.meal-btn-on');
+            const btnOff = btnGroup.querySelector('.meal-btn-off');
+            
+            // Prevent duplicate requests - skip if already in correct state
+            const isCurrentlyOn = btnOn.classList.contains('btn-primary');
+            const isCurrentlyOff = btnOff.classList.contains('btn-danger');
+            if ((action === 'on' && isCurrentlyOn) || (action === 'off' && isCurrentlyOff)) {
+                return;
+            }
+            
+            // Prevent rapid clicks
+            if (btnOn.disabled || btnOff.disabled) return;
+            btnOn.disabled = true;
+            btnOff.disabled = true;
+            
+            // Store previous state for rollback
+            const wasOn = btnOn.classList.contains('btn-primary');
+            const wasOff = btnOff.classList.contains('btn-danger');
+            
+            // Optimistic UI update - immediate visual feedback
+            if (action === 'on') {
+                btnOn.classList.remove('btn-outline-secondary', 'btn-success');
+                btnOn.classList.add('btn-primary');
+                btnOn.innerHTML = '<i class="fas fa-check"></i>';
+                btnOff.classList.remove('btn-danger');
+                btnOff.classList.add('btn-outline-secondary');
+                btnOff.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+                btnOff.classList.remove('btn-outline-secondary', 'btn-danger');
+                btnOff.classList.add('btn-danger');
+                btnOff.innerHTML = '<i class="fas fa-times"></i>';
+                btnOn.classList.remove('btn-primary');
+                btnOn.classList.add('btn-outline-secondary');
+                btnOn.innerHTML = '<i class="fas fa-check"></i>';
+            }
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch("{% url 'meal_dashboard' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: new URLSearchParams({
+                    'pref_id': prefId,
+                    'action': action,
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Success - keep optimistic state, just ensure correct classes
+                    if (action === 'on') {
+                        btnOn.classList.remove('btn-outline-secondary', 'btn-success');
+                        btnOn.classList.add('btn-primary');
+                        btnOff.classList.remove('btn-danger', 'btn-success');
+                        btnOff.classList.add('btn-outline-secondary');
+                    } else {
+                        btnOff.classList.remove('btn-outline-secondary', 'btn-success');
+                        btnOff.classList.add('btn-danger');
+                        btnOn.classList.remove('btn-primary', 'btn-success');
+                        btnOn.classList.add('btn-outline-secondary');
+                    }
+                    if (typeof showToast === 'function') {
+                        showToast(data.message || (action === 'on' ? 'Meal enabled' : 'Meal disabled'), 'success');
+                    }
+                } else {
+                    throw new Error(data.error || 'Server error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Rollback to previous state
+                if (wasOn) {
+                    btnOn.classList.remove('btn-outline-secondary');
+                    btnOn.classList.add('btn-primary');
+                    btnOff.classList.remove('btn-danger');
+                    btnOff.classList.add('btn-outline-secondary');
+                } else if (wasOff) {
+                    btnOff.classList.remove('btn-outline-secondary');
+                    btnOff.classList.add('btn-danger');
+                    btnOn.classList.remove('btn-primary');
+                    btnOn.classList.add('btn-outline-secondary');
+                } else {
+                    btnOn.classList.remove('btn-primary');
+                    btnOn.classList.add('btn-outline-secondary');
+                    btnOff.classList.remove('btn-danger');
+                    btnOff.classList.add('btn-outline-secondary');
+                }
+                btnOn.innerHTML = '<i class="fas fa-check"></i>';
+                btnOff.innerHTML = '<i class="fas fa-times"></i>';
+                
+                const errorMsg = error.message || 'Failed to update meal preference. Please try again.';
+                if (typeof showToast === 'function') {
+                    showToast(errorMsg, 'error');
+                } else {
+                    alert(errorMsg);
+                }
+            })
+            .finally(() => {
+                btnOn.disabled = false;
+                btnOff.disabled = false;
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

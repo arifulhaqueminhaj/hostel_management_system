@@ -1,0 +1,91 @@
+<footer class="footer-nestora{% if not user.is_authenticated %} footer-nestora-full{% endif %}">
+    <div class="container-fluid px-4">
+        <div class="row py-4">
+            <div class="col-12 col-md-3 mb-4 mb-md-0 min-h-col">
+                <h5 class="fw-bold text-white mb-1">Touch and Solve (TNS)</h5>
+                <p class="mb-2" style="color: #ff6b6b; font-weight: 600; font-size: 0.85rem;">Smart Living. Smarter Management.</p>
+                <p class="mb-0" style="color: rgba(255,255,255,0.5); font-size: 0.85rem; line-height: 1.6;">A comprehensive hostel management system designed to streamline operations, enhance resident experience, and simplify administrative tasks.</p>
+            </div>
+            <div class="col-12 col-md-3 mb-4 mb-md-0 min-h-col">
+                <h6 class="fw-semibold text-white mb-3" style="font-size: 0.9rem;">Quick Links</h6>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><a href="{% url 'index' %}" class="footer-link">Home</a></li>
+                    <li class="mb-2"><a href="{% url 'about' %}" class="footer-link">About</a></li>
+                    <li class="mb-2"><a href="#" class="footer-link">Contact</a></li>
+                </ul>
+            </div>
+            <div class="col-12 col-md-3 mb-4 mb-md-0 min-h-col">
+                <h6 class="fw-semibold text-white mb-3" style="font-size: 0.9rem;">Contact</h6>
+                <ul class="list-unstyled mb-0" style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">
+                    <li class="mb-2"><i class="fas fa-envelope me-2" style="color: #ff6b6b; width: 16px;"></i>info@tns-hostel.com</li>
+                    <li class="mb-2"><i class="fas fa-phone me-2" style="color: #ff6b6b; width: 16px;"></i>+880 1234-567890</li>
+                    <li class="mb-2"><i class="fas fa-map-marker-alt me-2" style="color: #ff6b6b; width: 16px;"></i>Dhaka, Bangladesh</li>
+                </ul>
+            </div>
+            <div class="col-12 col-md-3 mb-4 mb-md-0 min-h-col">
+                <h6 class="fw-semibold text-white mb-3" style="font-size: 0.9rem;">Follow Us</h6>
+                <div class="d-flex gap-2">
+                    <a href="#" class="social-circle" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-circle" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-circle" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-circle" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <hr style="border-color: rgba(255,255,255,0.08); margin: 0;">
+                <p class="text-center py-3 mb-0" style="color: rgba(255,255,255,0.4); font-size: 0.8rem;">&copy; 2026 Touch and Solve (TNS) v1.0. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .footer-nestora {
+        background: #0a0e27;
+        margin-left: var(--sidebar-width, 250px);
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .footer-nestora-full {
+        margin-left: 0;
+    }
+    .min-h-col {
+        min-height: 140px;
+    }
+    .footer-link {
+        color: rgba(255,255,255,0.5);
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: color 0.25s ease;
+    }
+    .footer-link:hover {
+        color: #ff6b6b;
+    }
+    .social-circle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 50%;
+        color: rgba(255,255,255,0.5);
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: all 0.25s ease;
+    }
+    .social-circle:hover {
+        background: #ff6b6b;
+        border-color: #ff6b6b;
+        color: #fff;
+    }
+    @media (max-width: 767.98px) {
+        .footer-nestora {
+            margin-left: 0;
+        }
+        .min-h-col {
+            min-height: auto;
+        }
+    }
+</style>

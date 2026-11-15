@@ -1,0 +1,157 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% load payment_filters %}
+{% block title %}Meal Bill - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'my_meal_bills' %}">My Meal Bills</a></li>
+                <li class="breadcrumb-item active">{{ bill.date }}</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-receipt"></i> Meal Bill — {{ bill.date }}</h1>
+    </div>
+    <div class="no-print">
+        <button type="button" class="btn btn-nestora" onclick="window.print()" title="Print Meal Bill Receipt">
+            <i class="fas fa-print me-1"></i>Print
+        </button>
+    </div>
+</div>
+{% block meal_bill_print_css %}
+<style>
+    @media print {
+        body { background: #fff !important; }
+        .main-content { padding: 0 !important; margin: 0 !important; }
+        .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+        .card-header, .card-body { padding: 0.5rem !important; }
+    }
+</style>
+{% endblock %}
+
+<div class="row g-4 receipt-print-area">
+    <div class="col-lg-8">
+        <div class="card fade-in">
+            <div class="card-header">
+                <span><i class="fas fa-file-invoice"></i> Bill Details</span>
+                <div class="ms-auto">
+                    {% if bill.is_paid %}
+                        <span class="badge badge-success" style="font-size:0.85rem;"><i class="fas fa-check-circle me-1"></i>Paid</span>
+                    {% else %}
+                        <span class="badge badge-pending" style="font-size:0.85rem;"><i class="fas fa-clock me-1"></i>Unpaid</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Renter</p>
+                        <p class="fw-semibold">{{ bill.booking.user.full_name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Email</p>
+                        <p class="fw-semibold">{{ bill.booking.user.email }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Hostel</p>
+                        <p class="fw-semibold">{{ bill.booking.room.hostel.name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Room</p>
+                        <p class="fw-semibold">{{ bill.booking.room.room_number }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Bed</p>
+                        <p class="fw-semibold">{{ bill.booking.bed.bed_number }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Date</p>
+                        <p class="fw-semibold">{{ bill.date|date:"l, F j, Y" }}</p>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3">Meal Summary</h6>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Meal Type</th>
+                                <th class="text-center">Count</th>
+                                <th class="text-end">Rate</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="fas fa-coffee text-warning me-1"></i> Breakfast</td>
+                                <td class="text-center">{{ bill.total_breakfasts }}</td>
+                                <td class="text-end">৳{{ bill.breakfast_amount|floatdiv:bill.total_breakfasts|default:"0" }}</td>
+                                <td class="text-end fw-semibold">৳{{ bill.breakfast_amount }}</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-bowl-food text-info me-1"></i> Lunch</td>
+                                <td class="text-center">{{ bill.total_lunches }}</td>
+                                <td class="text-end">৳{{ bill.lunch_amount|floatdiv:bill.total_lunches|default:"0" }}</td>
+                                <td class="text-end fw-semibold">৳{{ bill.lunch_amount }}</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-moon text-purple me-1"></i> Dinner</td>
+                                <td class="text-center">{{ bill.total_dinners }}</td>
+                                <td class="text-end">৳{{ bill.dinner_amount|floatdiv:bill.total_dinners|default:"0" }}</td>
+                                <td class="text-end fw-semibold">৳{{ bill.dinner_amount }}</td>
+                            </tr>
+                            <tr style="border-top:2px solid var(--border-color);">
+                                <td colspan="3" class="fw-bold">Total</td>
+                                <td class="text-end fw-bold" style="font-size:1.1rem;color:var(--accent);">৳{{ bill.total_amount }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card fade-in delay-1">
+            <div class="card-header">
+                <span><i class="fas fa-credit-card"></i> Payment</span>
+            </div>
+            <div class="card-body text-center">
+                {% if bill.is_paid %}
+                    <div class="py-3">
+                        <i class="fas fa-check-circle fa-3x mb-3" style="color:var(--success);"></i>
+                        <h5 class="fw-bold">Paid</h5>
+                        {% if bill.payment %}
+                        <p class="text-muted small">Transaction: {{ bill.payment.transaction_id }}</p>
+                        <p class="text-muted small">Method: {{ bill.payment.payment_method|title }}</p>
+                        <p class="text-muted small">Date: {{ bill.payment.payment_date|date:"M d, Y H:i" }}</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="py-3">
+                        <h4 class="fw-bold mb-3" style="color:var(--accent);">৳{{ bill.total_amount }}</h4>
+                        <p class="text-muted small mb-3">Pay your meal bill for {{ bill.date|date:"M d, Y" }}</p>
+                        <a href="{% url 'meal_pay' bill.pk %}" class="btn btn-nestora w-100 py-2 fw-bold">
+                            <i class="fas fa-credit-card me-2"></i>Pay Now
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card fade-in delay-2 mt-4">
+            <div class="card-header">
+                <span><i class="fas fa-info-circle"></i> Booking Info</span>
+            </div>
+            <div class="card-body">
+                <p class="mb-1 text-muted small">Booking Reference</p>
+                <p class="fw-semibold mb-3">{{ bill.booking.booking_reference }}</p>
+                <p class="mb-1 text-muted small">Check-in Date</p>
+                <p class="fw-semibold">{{ bill.booking.check_in }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

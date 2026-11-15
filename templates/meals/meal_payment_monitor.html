@@ -1,0 +1,224 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Meal Payment Monitor - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item active">Meal Payment Monitor</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-chart-line"></i> Meal Payment Monitor</h1>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3 fade-in delay-1">
+        <div class="stat-card primary">
+            <div class="stat-icon"><i class="fas fa-receipt"></i></div>
+            <div class="stat-value">{{ total_bills }}</div>
+            <div class="stat-label">Total Bills</div>
+        </div>
+    </div>
+    <div class="col-md-3 fade-in delay-2">
+        <div class="stat-card success">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-value">{{ paid_bills }}</div>
+            <div class="stat-label">Paid</div>
+        </div>
+    </div>
+    <div class="col-md-3 fade-in delay-3">
+        <div class="stat-card warning">
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-value">{{ unpaid_bills }}</div>
+            <div class="stat-label">Unpaid</div>
+        </div>
+    </div>
+    <div class="col-md-3 fade-in delay-4">
+        <div class="stat-card danger">
+            <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="stat-value">{{ overdue_bills }}</div>
+            <div class="stat-label">Overdue</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4 fade-in delay-1">
+        <div class="stat-card info">
+            <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+            <div class="stat-value">৳{{ total_amount|floatformat:0 }}</div>
+            <div class="stat-label">Total Amount</div>
+        </div>
+    </div>
+    <div class="col-md-4 fade-in delay-2">
+        <div class="stat-card success">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-value">৳{{ paid_amount|floatformat:0 }}</div>
+            <div class="stat-label">Collected</div>
+        </div>
+    </div>
+    <div class="col-md-4 fade-in delay-3">
+        <div class="stat-card danger">
+            <div class="stat-icon"><i class="fas fa-arrow-up"></i></div>
+            <div class="stat-value">৳{{ due_amount|floatformat:0 }}</div>
+            <div class="stat-label">Outstanding</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card fade-in mb-4">
+    <div class="card-header">
+        <span><i class="fas fa-filter me-2"></i>Filters</span>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Date</label>
+                <input type="date" name="date" class="form-control" value="{{ date_filter|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>Paid</option>
+                    <option value="unpaid" {% if status_filter == 'unpaid' %}selected{% endif %}>Unpaid</option>
+                    <option value="overdue" {% if status_filter == 'overdue' %}selected{% endif %}>Overdue</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Search</label>
+                <input type="text" name="q" class="form-control" placeholder="Renter, room, bed..." value="{{ query }}">
+            </div>
+            <div class="col-md-2 d-flex gap-2 align-items-end">
+                <button type="submit" class="btn btn-nestora w-100"><i class="fas fa-filter me-1"></i>Apply</button>
+                <a href="{% url 'meal_payment_monitor' %}" class="btn btn-ghost w-100"><i class="fas fa-undo me-1"></i>Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Meal Bills Table -->
+<div class="card fade-in delay-1">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Renter</th>
+                    <th>Room</th>
+                    <th>Bed</th>
+                    <th class="text-center">Breakfast</th>
+                    <th class="text-center">Lunch</th>
+                    <th class="text-center">Dinner</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-end">Payment Info</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bill in bills %}
+                <tr class="{% if not bill.is_paid and bill.date < today %}table-danger{% endif %}">
+                    <td class="fw-semibold">{{ bill.date|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="fw-semibold">{{ bill.booking.user.full_name }}</div>
+                        <small class="text-muted">{{ bill.booking.user.email }}</small>
+                    </td>
+                    <td>{{ bill.booking.room.room_number }}</td>
+                    <td>{{ bill.booking.bed.bed_number }}</td>
+                    <td class="text-center">
+                        {% if bill.total_breakfasts > 0 %}
+                        <span class="badge badge-success">৳{{ bill.breakfast_amount|floatformat:0 }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if bill.total_lunches > 0 %}
+                        <span class="badge badge-info">৳{{ bill.lunch_amount|floatformat:0 }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if bill.total_dinners > 0 %}
+                        <span class="badge" style="background:rgba(108,92,231,0.1);color:#6c5ce7;">৳{{ bill.dinner_amount|floatformat:0 }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end fw-bold">৳{{ bill.total_amount }}</td>
+                    <td class="text-center">
+                        {% if bill.is_paid %}
+                        <span class="badge badge-success"><i class="fas fa-check-circle me-1"></i>Paid</span>
+                        {% elif bill.payment and bill.payment.status == 'failed' %}
+                        <span class="badge badge-danger"><i class="fas fa-exclamation-triangle me-1"></i>Failed</span>
+                        {% elif bill.payment and bill.payment.status in 'pending processing' %}
+                        <span class="badge badge-warning"><i class="fas fa-clock me-1"></i>Payment Pending</span>
+                        {% elif bill.date < today %}
+                        <span class="badge badge-danger"><i class="fas fa-exclamation-triangle me-1"></i>Overdue</span>
+                        {% else %}
+                        <span class="badge badge-pending"><i class="fas fa-clock me-1"></i>Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        {% if bill.is_paid and bill.payment %}
+                        <div class="small">
+                            <div class="fw-semibold">{{ bill.payment.payment_method|title }}</div>
+                            <div class="text-muted">{{ bill.payment.payment_date|date:"M d, H:i" }}</div>
+                            <div class="text-muted">{{ bill.payment.transaction_id|truncatechars:16 }}</div>
+                        </div>
+                        {% elif not bill.is_paid %}
+                        <form method="post" action="{% url 'meal_bill_mark_paid' bill.pk %}" class="d-inline" onsubmit="return confirm('Confirm that this meal payment has been received?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="payment_method" value="cod">
+                            <button type="submit" class="btn btn-sm btn-success" title="Mark as paid (COD)">
+                                <i class="fas fa-check-circle me-1"></i>Mark Paid
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center py-4">
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <h5>No Meal Bills Found</h5>
+                            <p>No meal bills match your filters.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if page_obj.has_other_pages %}
+    <div class="card-footer">
+        <nav>
+            <ul class="pagination mb-0 justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&date={{ date_filter|date:'Y-m-d' }}&status={{ status_filter }}&q={{ query }}">&laquo;</a></li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}&date={{ date_filter|date:'Y-m-d' }}&status={{ status_filter }}&q={{ query }}">{{ num }}</a></li>
+                {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&date={{ date_filter|date:'Y-m-d' }}&status={{ status_filter }}&q={{ query }}">&raquo;</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Meal Settings - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item active">Meal Settings</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-cog"></i> Meal Service Settings</h1>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'meal_count' %}" class="btn btn-outline-nestora"><i class="fas fa-chart-simple"></i> Meal Counts</a>
+        <a href="{% url 'meal_payment_monitor' %}" class="btn btn-primary"><i class="fas fa-chart-line"></i> Payment Monitor</a>
+    </div>
+</div>
+
+{% if hostel_data %}
+    {% with item=hostel_data.0 %}
+    <div class="card fade-in delay-1">
+        <div class="card-header">
+            <span><i class="fas fa-building me-2"></i> {{ item.hostel.name }}</span>
+        </div>
+        <div class="card-body">
+            <div class="mb-4 p-3 bg-light rounded">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div>
+                        <h5 class="mb-1"><i class="fas fa-utensils me-2 text-primary"></i>Meal Service</h5>
+                        <p class="text-muted small mb-0">Enable or disable meal service for all renters</p>
+                    </div>
+                    <div>
+                        {% if item.settings and item.settings.is_enabled %}
+                            <span class="badge badge-success fs-6 px-3 py-2"><i class="fas fa-check-circle me-1"></i>Enabled</span>
+                        {% else %}
+                            <span class="badge badge-danger fs-6 px-3 py-2"><i class="fas fa-times-circle me-1"></i>Disabled</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <p class="text-muted small mb-1">Default Meal</p>
+                        <p class="fw-bold mb-0">{{ item.settings.get_default_status_display|default:"-" }}</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <p class="text-muted small mb-1">Cutoff Hours</p>
+                        <p class="fw-bold mb-0">{{ item.settings.cutoff_hours|default:"-" }}h</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <p class="text-muted small mb-1">Breakfast Rate</p>
+                        <p class="fw-bold mb-0">&#8377;{{ item.settings.rate_breakfast|default:"0" }}</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <p class="text-muted small mb-1">Lunch Rate</p>
+                        <p class="fw-bold mb-0">&#8377;{{ item.settings.rate_lunch|default:"0" }}</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <p class="text-muted small mb-1">Dinner Rate</p>
+                        <p class="fw-bold mb-0">&#8377;{{ item.settings.rate_dinner|default:"0" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a href="{% url 'meal_settings' item.hostel.pk %}" class="btn btn-nestora"><i class="fas fa-edit me-1"></i>Edit Settings</a>
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+{% else %}
+<div class="card fade-in delay-1">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-utensils fa-3x mb-3" style="color:var(--text-muted);opacity:0.3;"></i>
+        <h5>No Meal Settings Found</h5>
+        <p class="text-muted">Meal settings for Touch and Solve (TNS) Hostel will appear here once configured.</p>
+        <a href="{% url 'meal_settings' 1 %}" class="btn btn-nestora mt-2">Create Settings</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

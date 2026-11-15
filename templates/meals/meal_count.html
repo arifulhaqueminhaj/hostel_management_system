@@ -1,0 +1,78 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Meal Count - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item active">Meal Count</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-chart-simple"></i> Daily Meal Count</h1>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'meal_payment_monitor' %}" class="btn btn-primary"><i class="fas fa-chart-line"></i> Payment Monitor</a>
+    </div>
+</div>
+
+<div class="card fade-in mb-4">
+    <div class="card-header">
+        <span><i class="fas fa-calendar-day"></i> {{ target_date|date:"l, F j, Y" }}</span>
+        <div class="d-flex gap-2 ms-auto">
+            <a href="?date={{ target_date|date:'Y-m-d'|add:'-1 days' }}" class="btn btn-outline-nestora btn-sm"><i class="fas fa-chevron-left"></i></a>
+            <a href="?date=" class="btn btn-outline-nestora btn-sm">Today</a>
+            <a href="?date={{ target_date|date:'Y-m-d'|add:'1 days' }}" class="btn btn-outline-nestora btn-sm"><i class="fas fa-chevron-right"></i></a>
+        </div>
+    </div>
+</div>
+
+{% if not counts %}
+<div class="card fade-in delay-1">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-utensils fa-3x mb-3" style="color:var(--text-muted);opacity:0.3;"></i>
+        <h5>No Meal Service Enabled</h5>
+        <p class="text-muted">Enable meal service for hostels to see counts here.</p>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    {% for c in counts %}
+    <div class="col-lg-6 fade-in delay-{{ forloop.counter }}">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-building me-1"></i> {{ c.hostel.name }}</span>
+                <a href="{% url 'meal_settings' c.hostel.pk %}" class="btn btn-outline-nestora btn-sm"><i class="fas fa-cog"></i></a>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 text-center">
+                    <div class="col-4">
+                        <div class="p-3 rounded" style="background:rgba(255,193,7,0.1);">
+                            <h4 class="fw-bold mb-0" style="color:#ffc107;">{{ c.breakfast_on }}</h4>
+                            <small class="text-muted">Breakfast</small>
+                            <div><small>{{ c.breakfast_total }} total</small></div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 rounded" style="background:rgba(13,202,240,0.1);">
+                            <h4 class="fw-bold mb-0" style="color:#0dcaf0;">{{ c.lunch_on }}</h4>
+                            <small class="text-muted">Lunch</small>
+                            <div><small>{{ c.lunch_total }} total</small></div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 rounded" style="background:rgba(108,92,231,0.1);">
+                            <h4 class="fw-bold mb-0" style="color:#6c5ce7;">{{ c.dinner_on }}</h4>
+                            <small class="text-muted">Dinner</small>
+                            <div><small>{{ c.dinner_total }} total</small></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

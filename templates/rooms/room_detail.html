@@ -1,0 +1,157 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Room {{ room.room_number }} - Touch and Solve (TNS) Hostel{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><i class="fas fa-door-open"></i> Room {{ room.room_number }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'search_rooms' %}">Find Your Room</a></li>
+                <li class="breadcrumb-item active">Room {{ room.room_number }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="page-actions">
+        {% if user.is_authenticated and user.role in 'SUPER_ADMIN,HOSTEL_MANAGER' %}
+        <a href="{% url 'bed_manage' room.pk %}" class="btn btn-outline-nestora"><i class="fas fa-bed"></i> Manage Beds</a>
+        <a href="{% url 'room_edit' room.pk %}" class="btn btn-outline-nestora"><i class="fas fa-edit"></i> Edit</a>
+        <a href="{% url 'room_delete' room.pk %}" class="btn btn-primary"><i class="fas fa-trash"></i> Delete</a>
+        {% endif %}
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-8">
+        {% if room.image %}
+        <div class="card mb-4 overflow-hidden">
+            <img src="{{ room.image.url }}" class="card-img-top" alt="Room {{ room.room_number }}" style="height:300px;object-fit:cover;">
+        </div>
+        {% else %}
+        <div class="card mb-4 d-flex align-items-center justify-content-center" style="height:300px;background:linear-gradient(135deg,var(--sidebar-bg),var(--primary));">
+            <i class="fas fa-bed fa-5x" style="color:rgba(255,255,255,0.3);"></i>
+        </div>
+        {% endif %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <span><i class="fas fa-info-circle"></i> Room Details</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Hostel</p>
+                        <p class="fw-semibold">Touch and Solve (TNS) Hostel</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Location</p>
+                        <p class="fw-semibold">{{ room.unit.floor.display_name }} &middot; Unit {{ room.unit.name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Room Type</p>
+                        <p class="fw-semibold">{{ room.room_type.name|default:'-' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Monthly Rent</p>
+                        <p class="fw-bold" style="color:var(--accent);">{{ settings.NESTORA_CURRENCY|default:'৳' }}{{ room.rent }}/month</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Security Deposit</p>
+                        <p class="fw-semibold">{{ settings.NESTORA_CURRENCY|default:'৳' }}{{ room.security_deposit }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Occupancy</p>
+                        <p class="fw-semibold">{{ room.beds_available }} of {{ room.beds_total }} beds available</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Status</p>
+                        <p>
+                            {% if room.status == 'available' %}<span class="badge badge-available">Available</span>
+                            {% elif room.status == 'booked' %}<span class="badge badge-booked">Booked</span>
+                            {% elif room.status == 'occupied' %}<span class="badge badge-occupied">Occupied</span>
+                            {% elif room.status == 'maintenance' %}<span class="badge badge-maintenance">Maintenance</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if room.size_sqft %}
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Size</p>
+                        <p class="fw-semibold">{{ room.size_sqft }} sq.ft</p>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Bathrooms</p>
+                        <p class="fw-semibold">{{ room.num_bathrooms }} {% if room.attached_bathroom %}Attached{% else %}Shared{% endif %}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">AC</p>
+                        <p class="fw-semibold">{% if room.is_ac %}Yes{% else %}No{% endif %}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Balcony</p>
+                        <p class="fw-semibold">{% if room.has_balcony %}Yes{% else %}No{% endif %}</p>
+                    </div>
+                </div>
+                {% if room.description %}
+                <hr>
+                <p class="mb-1 text-muted small">Description</p>
+                <p>{{ room.description|linebreaks }}</p>
+                {% endif %}
+                {% if room.amenities %}
+                <hr>
+                <p class="mb-1 text-muted small">Amenities</p>
+                <p>{{ room.amenities|linebreaks }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-bed"></i> Beds ({{ room.beds_total }})</span>
+                <span class="badge badge-available">{{ room.beds_available }} free</span>
+            </div>
+<div class="card-body">
+                <div class="row g-3">
+                    {% for bed in beds %}
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="border rounded p-3 text-center h-100">
+                            <i class="fas fa-bed mb-2" style="font-size:1.5rem;color:{% if bed.status == 'available' %}#198754{% elif bed.status == 'occupied' %}var(--accent){% elif bed.status == 'reserved' %}#ffc107{% else %}#6c757d{% endif %};"></i>
+                            <p class="fw-semibold mb-1 small">{{ bed.bed_number }}</p>
+                            <!-- Bed details -->
+                            <p class="text-muted tiny mb-1"><strong>Position:</strong> {% if bed.position %}{{ bed.get_position_display }}{% else %}N/A{% endif %}</p>
+                            <p class="text-muted tiny mb-1"><strong>Window:</strong> {% if bed.window_side %}Yes{% else %}No{% endif %}</p>
+                            <p class="text-muted tiny mb-1"><strong>Charging:</strong> {% if bed.has_charging_point %}Yes{% else %}No{% endif %}</p>
+                            <p class="text-muted tiny mb-1"><strong>Reading Light:</strong> {% if bed.has_reading_light %}Yes{% else %}No{% endif %}</p>
+                            {% if bed.locker_number %}
+                            <p class="text-muted tiny mb-1"><strong>Locker:</strong> {{ bed.locker_number }}</p>
+                            {% endif %}
+                            {% if bed.status == 'available' %}<span class="badge badge-available">Available</span>
+                            {% elif bed.status == 'reserved' %}<span class="badge badge-warning">Reserved</span>
+                            {% elif bed.status == 'occupied' %}<span class="badge badge-occupied">Occupied</span>
+                            {% else %}<span class="badge badge-maintenance">Maintenance</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center text-muted py-3">No beds configured for this room yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+</div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card mb-4" {% if room.beds_available > 0 and room.is_active %}style="border:2px solid var(--accent);"{% endif %}>
+            <div class="card-body text-center">
+                <h3 class="fw-bold" style="color:var(--accent);">{{ settings.NESTORA_CURRENCY|default:'৳' }}{{ room.rent }}</h3>
+                <p class="text-muted small">per month &middot; {{ room.beds_available }} bed{{ room.beds_available|pluralize }} free</p>
+                {% if room.beds_available > 0 and room.is_active %}
+                <a href="{% url 'create_booking' room.pk %}?check_in={{ request.GET.check_in }}&check_out={{ request.GET.check_out }}" class="btn btn-primary w-100"><i class="fas fa-calendar-check"></i> Book Now</a>
+                {% elif room.status == 'maintenance' %}
+                <button class="btn btn-ghost w-100" disabled><i class="fas fa-tools"></i> Under Maintenance</button>
+                {% else %}
+                <button class="btn btn-ghost w-100" disabled><i class="fas fa-user"></i> Fully Occupied</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

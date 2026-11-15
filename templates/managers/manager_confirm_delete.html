@@ -1,0 +1,23 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Deactivate {{ manager.full_name }} - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-body p-5">
+                <i class="fas fa-user-slash" style="font-size:4rem;color:var(--accent);"></i>
+                <h4 class="fw-bold mt-3">Deactivate Manager</h4>
+                <p class="text-muted mb-4">Are you sure you want to deactivate <strong>{{ manager.full_name }}</strong> ({{ manager.email }})? They will no longer be able to log in. This action cannot be undone from here.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{% url 'manager_list' %}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-user-slash"></i> Deactivate</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

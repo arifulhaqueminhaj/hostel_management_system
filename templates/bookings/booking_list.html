@@ -1,0 +1,166 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}All Bookings - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item active">All Bookings</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-book"></i>All Bookings</h1>
+    </div>
+</div>
+
+<div class="card fade-in mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label"><i class="fas fa-filter me-1 text-accent"></i>Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="confirmed" {% if request.GET.status == 'confirmed' %}selected{% endif %}>Approved</option>
+                    <option value="checked_in" {% if request.GET.status == 'checked_in' %}selected{% endif %}>Checked In</option>
+                    <option value="checked_out" {% if request.GET.status == 'checked_out' %}selected{% endif %}>Checked Out</option>
+                    <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                    <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><i class="fas fa-calendar-alt me-1 text-accent"></i>From</label>
+                <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><i class="fas fa-calendar-alt me-1 text-accent"></i>To</label>
+                <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><i class="fas fa-search me-1 text-accent"></i>Search</label>
+                <input type="text" name="q" class="form-control" placeholder="Reference or renter..." value="{{ request.GET.q }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-nestora"><i class="fas fa-search me-1"></i>Apply Filters</button>
+                <a href="{% url 'all_bookings' %}" class="btn btn-ghost"><i class="fas fa-undo me-1"></i>Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card fade-in delay-1">
+    <div class="table-responsive table-responsive-cards">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Renter</th>
+                    <th>Room</th>
+                    <th>Hostel</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in page_obj %}
+                <tr>
+                    <td data-label="#">{{ forloop.counter0|add:page_obj.start_index }}</td>
+                    <td data-label="Renter">{{ booking.user.get_full_name|default:booking.user.email }}</td>
+                    <td data-label="Room">{{ booking.room.room_number }}{% if booking.bed %} · Bed {{ booking.bed.bed_number }}{% endif %}</td>
+                    <td data-label="Hostel">{{ booking.room.hostel.name }}</td>
+                    <td data-label="Check In">{{ booking.check_in|date:"M d, Y" }}</td>
+                    <td data-label="Check Out">{{ booking.check_out|date:"M d, Y" }}</td>
+                    <td data-label="Total"><strong>{{ settings.NESTORA_CURRENCY|default:'$' }}{{ booking.total_amount }}</strong></td>
+                    <td data-label="Status">
+                        {% if booking.status == 'pending' and booking.payment_status == 'paid' %}
+                        <span class="badge badge-warning">Paid - Awaiting Approval</span>
+                        {% elif booking.status == 'pending' %}
+                        <span class="badge badge-pending">Pending</span>
+                        {% elif booking.status == 'confirmed' %}
+                        <span class="badge badge-success">Approved</span>
+                        {% elif booking.status == 'cancelled' %}
+                        <span class="badge badge-cancelled">Cancelled</span>
+                        {% elif booking.status == 'checked_out' %}
+                        <span class="badge badge-info">Checked Out</span>
+                        {% else %}
+                        <span class="badge badge-occupied">{{ booking.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Created">{{ booking.created_at|date:"M d, Y" }}</td>
+                    <td data-label="Actions" class="text-end table-actions">
+                        <a href="{% url 'booking_detail' booking.pk %}" class="btn btn-icon btn-ghost" title="View" data-bs-toggle="tooltip">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        {% if user_role == 'SUPER_ADMIN' or user_role == 'HOSTEL_MANAGER' %}
+                        <a href="{% url 'edit_booking' booking.pk %}" class="btn btn-icon btn-ghost" title="Edit" data-bs-toggle="tooltip">
+                            <i class="fas fa-edit text-warning"></i>
+                        </a>
+                        {% endif %}
+                        {% if booking.status == 'pending' %}
+                        <a href="{% url 'cancel_booking' booking.pk %}" class="btn btn-icon btn-ghost" title="Cancel" data-bs-toggle="tooltip" onclick="return confirm('Cancel this booking?')">
+                            <i class="fas fa-times text-danger"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center py-5">
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-times"></i>
+                            <h5>No Bookings Found</h5>
+                            <p>No bookings match your current filters.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if is_paginated %}
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <small class="text-muted">Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }}</small>
+        <nav>
+            <ul class="pagination mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1" aria-label="First">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" aria-label="Prev">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item"><a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" aria-label="Next">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,194 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }} - Touch and Solve (TNS) HMS</title>
+    <style>
+        @page { size: A4; margin: 2cm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #333; }
+        h1 { font-size: 18pt; color: #0a0e27; margin-bottom: 5pt; }
+        h2 { font-size: 14pt; color: #0a0e27; margin-bottom: 10pt; }
+        .header { text-align: center; margin-bottom: 20pt; border-bottom: 2pt solid #ff6b6b; padding-bottom: 10pt; }
+        .header .brand { font-size: 24pt; font-weight: bold; color: #0a0e27; }
+        .header .brand span { color: #ff6b6b; }
+        .meta { font-size: 9pt; color: #666; margin-bottom: 15pt; }
+        .meta span { margin-right: 20pt; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
+        th { background-color: #0a0e27; color: #fff; font-size: 8pt; text-transform: uppercase; padding: 6pt 8pt; text-align: left; }
+        td { padding: 5pt 8pt; border-bottom: 1pt solid #ddd; font-size: 9pt; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .footer { text-align: center; font-size: 8pt; color: #999; margin-top: 20pt; border-top: 1pt solid #ddd; padding-top: 10pt; }
+        .badge { display: inline-block; padding: 2pt 6pt; border-radius: 8pt; font-size: 7pt; font-weight: bold; }
+        .badge-pending { background: #fff3cd; color: #856404; }
+        .badge-confirmed { background: #d4edda; color: #155724; }
+        .badge-cancelled { background: #f8d7da; color: #721c24; }
+        .badge-success, .badge-paid { background: #d4edda; color: #155724; }
+        .badge-failed { background: #f8d7da; color: #721c24; }
+        .summary-box { background: #f0f2f8; padding: 10pt; border-radius: 4pt; margin-bottom: 15pt; }
+        .summary-box strong { color: #0a0e27; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="brand">Nest<span>ora</span> HMS</div>
+        <div style="font-size: 9pt; color: #666;">Hostel Management System</div>
+    </div>
+
+    <h1>{{ title }}</h1>
+    <div class="meta">
+        <span><strong>Generated:</strong> {{ generated_at|date:"M d, Y h:i A" }}</span>
+        {% if start_date %}<span><strong>From:</strong> {{ start_date }}</span>{% endif %}
+        {% if end_date %}<span><strong>To:</strong> {{ end_date }}</span>{% endif %}
+    </div>
+
+    {% if report_type == 'bookings' %}
+    <div class="summary-box">
+        <strong>Total Bookings:</strong> {{ data|length }} |
+        <strong>Total Revenue:</strong> BDT {% for b in data %}{% if forloop.first %}0{% endif %}{% endfor %}
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Reference</th>
+                <th>Renter</th>
+                <th>Room</th>
+                <th>Hostel</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in data %}
+            <tr>
+                <td>{{ b.booking_reference }}</td>
+                <td>{{ b.user.full_name }}</td>
+                <td>{{ b.room.room_number }}</td>
+                <td>{{ b.room.hostel.name }}</td>
+                <td>{{ b.check_in|date:"d M Y" }}</td>
+                <td>{% if b.check_out %}{{ b.check_out|date:"d M Y" }}{% else %}-{% endif %}</td>
+                <td>{{ b.total_amount }}</td>
+                <td>{{ b.get_status_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% elif report_type == 'payments' %}
+    <div class="summary-box">
+        <strong>Total Payments:</strong> {{ data|length }}
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Transaction ID</th>
+                <th>User</th>
+                <th>Booking</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in data %}
+            <tr>
+                <td>{{ p.transaction_id }}</td>
+                <td>{% if p.user %}{{ p.user.full_name }}{% else %}-{% endif %}</td>
+                <td>{% if p.booking %}{{ p.booking.booking_reference }}{% else %}-{% endif %}</td>
+                <td>{{ p.amount }}</td>
+                <td>{{ p.payment_method|default:"-" }}</td>
+                <td>{{ p.payment_date|date:"d M Y H:i" }}</td>
+                <td>{{ p.get_status_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% elif report_type == 'rooms' %}
+    <table>
+        <thead>
+            <tr>
+                <th>Hostel</th>
+                <th>Room No</th>
+                <th>Floor</th>
+                <th>Capacity</th>
+                <th>Rent</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in data %}
+            <tr>
+                <td>{{ r.hostel.name }}</td>
+                <td>{{ r.room_number }}</td>
+                <td>{{ r.floor }}</td>
+                <td>{{ r.capacity }}</td>
+                <td>{{ r.rent }}</td>
+                <td>{{ r.get_status_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% elif report_type == 'complaints' %}
+    <table>
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Category</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Assigned To</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in data %}
+            <tr>
+                <td>{{ c.user.full_name }}</td>
+                <td>{{ c.get_category_display }}</td>
+                <td>{{ c.subject }}</td>
+                <td>{{ c.get_status_display }}</td>
+                <td>{% if c.assigned_to %}{{ c.assigned_to.full_name }}{% else %}-{% endif %}</td>
+                <td>{{ c.created_at|date:"d M Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% elif report_type == 'revenue' %}
+    <div class="summary-box">
+        <strong>Year:</strong> {{ year }} |
+        <strong>Total Revenue:</strong> BDT {{ grand_total|floatformat:2 }}
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>Revenue (BDT)</th>
+                <th>Transactions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in data %}
+            <tr>
+                <td>{{ m.month_name }}</td>
+                <td>{{ m.total|floatformat:2 }}</td>
+                <td>{{ m.count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% else %}
+    <p>No data available for this report type.</p>
+    {% endif %}
+
+    <div class="footer">
+        <p>Touch and Solve (TNS) Hostel Management System &mdash; Confidential Report</p>
+        <p>Generated on {{ generated_at|date:"M d, Y h:i A" }}</p>
+    </div>
+</body>
+</html>

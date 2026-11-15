@@ -1,0 +1,110 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}My Bookings - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item active">My Bookings</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-book-open"></i>My Bookings</h1>
+    </div>
+</div>
+
+<div class="card fade-in mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label"><i class="fas fa-filter me-1 text-accent"></i>Filter by Status</label>
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="confirmed" {% if request.GET.status == 'confirmed' %}selected{% endif %}>Approved</option>
+                    <option value="checked_in" {% if request.GET.status == 'checked_in' %}selected{% endif %}>Checked In</option>
+                    <option value="checked_out" {% if request.GET.status == 'checked_out' %}selected{% endif %}>Checked Out</option>
+                    <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label"><i class="fas fa-search me-1 text-accent"></i>Search</label>
+                <input type="text" name="q" class="form-control" placeholder="Reference or hostel..." value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-4 d-flex gap-2 align-items-end">
+                <button type="submit" class="btn btn-nestora"><i class="fas fa-search me-1"></i>Filter</button>
+                <a href="{% url 'my_bookings' %}" class="btn btn-ghost"><i class="fas fa-undo me-1"></i>Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if bookings %}
+<div class="card fade-in delay-1">
+    <div class="table-responsive table-responsive-cards">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Room</th>
+                    <th>Hostel</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td data-label="Reference">
+                        <a href="{% url 'booking_detail' booking.pk %}" class="fw-bold text-decoration-none">{{ booking.booking_reference }}</a>
+                    </td>
+                    <td data-label="Room">{{ booking.room.room_number }}{% if booking.bed %} · Bed {{ booking.bed.bed_number }}{% endif %}</td>
+                    <td data-label="Hostel">{{ booking.room.hostel.name }}</td>
+                    <td data-label="Check In">{{ booking.check_in|date:"M d, Y" }}</td>
+                    <td data-label="Check Out">{{ booking.check_out|date:"M d, Y" }}</td>
+                    <td data-label="Total"><strong>{{ settings.NESTORA_CURRENCY|default:'$' }}{{ booking.total_amount }}</strong></td>
+                    <td data-label="Status">
+                        {% if booking.status == 'pending' and booking.payment_status == 'paid' %}
+                        <span class="badge badge-warning">Awaiting Approval</span>
+                        {% elif booking.status == 'pending' %}
+                        <span class="badge badge-pending">Pending</span>
+                        {% elif booking.status == 'confirmed' %}
+                        <span class="badge badge-success">Approved</span>
+                        {% elif booking.status == 'cancelled' %}
+                        <span class="badge badge-cancelled">Cancelled</span>
+                        {% elif booking.status == 'checked_out' %}
+                        <span class="badge badge-info">Checked Out</span>
+                        {% else %}
+                        <span class="badge badge-occupied">{{ booking.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Actions" class="text-end table-actions">
+                        <a href="{% url 'booking_detail' booking.pk %}" class="btn btn-sm btn-outline-nestora" title="View">View</a>
+                        {% if booking.payment_status != 'paid' and booking.status != 'cancelled' %}
+                        <a href="{% url 'initiate_payment' booking.pk %}" class="btn btn-sm btn-nestora"><i class="fas fa-credit-card me-1"></i>Pay Now</a>
+                        {% endif %}
+                        {% if booking.status == 'pending' or booking.status == 'confirmed' %}
+                        <a href="{% url 'cancel_booking' booking.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this booking?')">Cancel</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="empty-state fade-in">
+    <i class="fas fa-calendar-times"></i>
+    <h5>No Bookings Yet</h5>
+    <p>You haven't made any bookings. Browse available rooms to get started.</p>
+    <a href="{% url 'search_rooms' %}" class="btn btn-nestora mt-3">
+        <i class="fas fa-search me-2"></i>Find a Room
+    </a>
+</div>
+{% endif %}
+{% endblock %}

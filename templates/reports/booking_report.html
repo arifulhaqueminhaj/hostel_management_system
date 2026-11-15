@@ -1,0 +1,122 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Booking Report - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <h1 class="page-title"><i class="fas fa-calendar-alt"></i>Booking Report</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'report_index' %}">Reports</a></li>
+                <li class="breadcrumb-item active">Booking Report</li>
+            </ol>
+        </nav>
+    </div>
+    <div>
+        <a href="{% url 'report_index' %}" class="btn btn-outline-nestora btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Reports
+        </a>
+    </div>
+</div>
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">From Date</label>
+                <input type="date" name="from" class="form-control" value="{{ request.GET.from|default:'' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">To Date</label>
+                <input type="date" name="to" class="form-control" value="{{ request.GET.to|default:'' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="confirmed" {% if request.GET.status == 'confirmed' %}selected{% endif %}>Approved</option>
+                    <option value="checked_in" {% if request.GET.status == 'checked_in' %}selected{% endif %}>Checked In</option>
+                    <option value="checked_out" {% if request.GET.status == 'checked_out' %}selected{% endif %}>Checked Out</option>
+                    <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-nestora"><i class="fas fa-filter me-1"></i> Apply Filter</button>
+                <a href="{% url 'booking_report' %}" class="btn btn-ghost">Reset</a>
+                <div class="dropdown float-end">
+                    <button class="btn btn-outline-nestora dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-download me-1"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'export_pdf' 'bookings' %}?start_date={{ request.GET.from|default:'' }}&end_date={{ request.GET.to|default:'' }}"><i class="fas fa-file-pdf me-2"></i>Export PDF</a></li>
+                        <li><a class="dropdown-item" href="{% url 'export_excel' 'bookings' %}?start_date={{ request.GET.from|default:'' }}&end_date={{ request.GET.to|default:'' }}"><i class="fas fa-file-excel me-2"></i>Export Excel</a></li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="row g-4 mb-4">
+    <div class="col-md-6 fade-in delay-1">
+        <div class="stat-card primary">
+            <div class="stat-icon"><i class="fas fa-book"></i></div>
+            <div class="stat-value">{{ total_bookings|default:0 }}</div>
+            <div class="stat-label">Total Bookings</div>
+        </div>
+    </div>
+    <div class="col-md-6 fade-in delay-2">
+        <div class="stat-card success">
+            <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+            <div class="stat-value">KES {{ total_revenue|floatformat:0|default:0 }}</div>
+            <div class="stat-label">Total Revenue</div>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-list me-2 text-accent"></i>Booking Records</span>
+        <span class="badge badge-info">{{ bookings|length|default:'0' }} entries</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive table-responsive-cards">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Renter</th>
+                        <th>Room</th>
+                        <th>Hostel</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td data-label="Date">{{ booking.created_at|date:'d M Y' }}</td>
+                        <td data-label="Reference"><strong>{{ booking.booking_reference }}</strong></td>
+                        <td data-label="Renter">{{ booking.user.get_full_name|default:booking.user.email }}</td>
+                        <td data-label="Room">{{ booking.room.room_number }}</td>
+                        <td data-label="Hostel">{{ booking.room.hostel.name }}</td>
+                        <td data-label="Amount">KES {{ booking.total_amount|floatformat:0 }}</td>
+                        <td data-label="Status"><span class="badge badge-{{ booking.status|lower }}">{{ booking.get_status_display|default:booking.status }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <h5>No Bookings Found</h5>
+                                <p class="text-muted">No booking records match your criteria.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

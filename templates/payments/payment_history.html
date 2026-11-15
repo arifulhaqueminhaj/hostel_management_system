@@ -1,0 +1,227 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Payment History - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'payment_history' %}">Payments</a></li>
+        <li class="breadcrumb-item active" aria-current="page">History</li>
+      </ol>
+    </nav>
+    <h1 class="page-title"><i class="fas fa-credit-card"></i>Payment History</h1>
+  </div>
+</div>
+
+<div class="card fade-in mb-4">
+  <div class="card-header">
+    <span><i class="fas fa-filter me-2"></i>Filter Payments</span>
+  </div>
+  <div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select">
+          <option value="">All Statuses</option>
+          <option value="success" {% if selected_status == 'success' %}selected{% endif %}>Success / Paid</option>
+          <option value="processing" {% if selected_status == 'processing' %}selected{% endif %}>Processing</option>
+          <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="failed" {% if selected_status == 'failed' %}selected{% endif %}>Failed</option>
+          <option value="refunded" {% if selected_status == 'refunded' %}selected{% endif %}>Refunded</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Payment Method</label>
+        <select name="method" class="form-select">
+          <option value="">All Methods</option>
+          <option value="sslcommerz" {% if selected_method == 'sslcommerz' %}selected{% endif %}>Online (SSLCommerz)</option>
+          <option value="cod" {% if selected_method == 'cod' %}selected{% endif %}>Cash on Delivery</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Payment Type</label>
+        <select name="type" class="form-select">
+          <option value="">All Types</option>
+          <option value="room" {% if selected_type == 'room' %}selected{% endif %}>Room Booking</option>
+          <option value="meal" {% if selected_type == 'meal' %}selected{% endif %}>Meal</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">From Date</label>
+        <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">To Date</label>
+        <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Search</label>
+        <input type="text" name="q" class="form-control" placeholder="Transaction ID or renter..." value="{{ query }}">
+      </div>
+      <div class="col-md-6 d-flex gap-2 align-items-end">
+        <button type="submit" class="btn btn-nestora"><i class="fas fa-filter me-1"></i>Apply Filters</button>
+        <a href="{% url 'payment_history' %}" class="btn btn-ghost"><i class="fas fa-undo me-1"></i>Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card fade-in">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+
+          {% if user_role != 'RENTER' %}
+            <th>Renter</th>
+          {% endif %}
+
+          <th>Room</th>
+          <th>Amount</th>
+          <th>Method</th>
+          <th>Type</th>
+          <th>Transaction ID</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for payment in page_obj %}
+          <tr>
+            <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+
+            {% if user_role != 'RENTER' %}
+              <td>
+                {% if payment.booking and payment.booking.user %}
+                  {{ payment.booking.user.get_full_name|default:payment.booking.user.email }}
+                {% else %}
+                  {{ payment.user.get_full_name|default:payment.user.email|default:"&mdash;" }}
+                {% endif %}
+              </td>
+            {% endif %}
+
+            <td>
+              {% if payment.booking and payment.booking.room %}
+                {{ payment.booking.room.room_number }}
+              {% else %}
+                &mdash;
+              {% endif %}
+            </td>
+
+            <td class="fw-bold">
+              {{ settings.NESTORA_CURRENCY|default:'৳' }} {{ payment.amount }}
+            </td>
+
+            <td>
+              {% if payment.payment_method == 'cod' %}
+                <span class="badge bg-success text-white"><i class="fas fa-money-bill-wave me-1"></i>Cash on Delivery</span>
+              {% else %}
+                <span class="badge bg-info text-white"><i class="fas fa-credit-card me-1"></i>Online (SSLCommerz)</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if payment.payment_type == 'meal' %}
+                <span class="badge bg-primary"><i class="fas fa-utensils me-1"></i>Meal</span>
+              {% else %}
+                <span class="badge bg-secondary"><i class="fas fa-bed me-1"></i>Room</span>
+              {% endif %}
+            </td>
+
+            <td class="text-muted small">
+              {% if payment.payment_method == 'cod' %}
+                <span class="text-warning fw-semibold">COD</span>
+              {% else %}
+                {{ payment.transaction_id|default:"&mdash;"|truncatechars:16 }}
+              {% endif %}
+            </td>
+
+            <td>
+              {% if payment.payment_method == 'cod' and payment.status != 'success' and payment.status != 'paid' %}
+                <span class="badge badge-warning"><i class="fas fa-money-bill-wave me-1"></i> Pending COD</span>
+              {% elif payment.status == 'success' or payment.status == 'paid' %}
+                <span class="badge badge-paid"><i class="fas fa-check-circle me-1"></i> Paid</span>
+              {% elif payment.status == 'processing' %}
+                <span class="badge badge-info"><i class="fas fa-spinner me-1"></i> Processing</span>
+              {% elif payment.status == 'pending' %}
+                <span class="badge badge-pending"><i class="fas fa-clock me-1"></i> Pending</span>
+              {% elif payment.status == 'failed' %}
+                <span class="badge badge-danger"><i class="fas fa-times-circle me-1"></i> Failed</span>
+              {% elif payment.status == 'refunded' %}
+                <span class="badge badge-cancelled"><i class="fas fa-undo me-1"></i> Refunded</span>
+              {% else %}
+                <span class="badge badge-cancelled">{{ payment.status|title }}</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {{ payment.payment_date|date:"M d, Y H:i" }}
+            </td>
+
+            <!-- ACTIONS -->
+            <td class="text-end">
+              {% if payment.status == 'success' or payment.status == 'paid' %}
+                <div class="btn-group btn-group-sm">
+                  <button type="button" class="btn btn-link text-primary" onclick="window.location='{% url 'payment_receipt_detail' payment.id %}'" title="View Receipt">
+                    <i class="fas fa-eye me-1"></i>View
+                  </button>
+                  <button type="button" class="btn btn-link text-secondary" onclick="window.location.href='{% url 'payment_receipt_detail' payment.id %}?print=1'" title="Print Receipt">
+                    <i class="fas fa-print me-1"></i>Print
+                  </button>
+                </div>
+              {% elif payment.payment_method == 'cod' and user_role != 'RENTER' %}
+                <form method="post" action="{% url 'mark_cod_paid' payment.id %}" class="d-inline" onsubmit="return confirm('Confirm that this COD payment of {{ settings.NESTORA_CURRENCY|default:'৳' }}{{ payment.amount }} has been received?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-success" title="Mark this COD payment as received">
+                    <i class="fas fa-check-circle me-1"></i>Verify COD Payment
+                  </button>
+                </form>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+          </tr>
+
+        {% empty %}
+
+          <tr>
+            <td colspan="{% if user_role != 'RENTER' %}10{% else %}9{% endif %}">
+              <div class="empty-state">
+                <i class="fas fa-credit-card"></i>
+                <h5>No Payments Found</h5>
+                <p>No payment records match your filters.</p>
+              </div>
+            </td>
+          </tr>
+
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% if page_obj.has_other_pages %}
+  <nav class="mt-4 d-flex justify-content-center" aria-label="Payment pagination">
+    <ul class="pagination">
+      <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+        <a class="page-link" href="?page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}"><i class="fas fa-angle-left"></i></a>
+      </li>
+      {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+        {% endif %}
+      {% endfor %}
+      <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+        <a class="page-link" href="?page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ page_obj.paginator.num_pages }}{% endif %}"><i class="fas fa-angle-right"></i></a>
+      </li>
+    </ul>
+  </nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,166 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ complaint.subject }} - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+        {% if user_role == 'RENTER' %}
+          <li class="breadcrumb-item"><a href="{% url 'my_complaints' %}">My Complaints</a></li>
+        {% else %}
+          <li class="breadcrumb-item"><a href="{% url 'complaint_list' %}">All Complaints</a></li>
+        {% endif %}
+        <li class="breadcrumb-item active" aria-current="page">{{ complaint.subject|truncatechars:30 }}</li>
+      </ol>
+    </nav>
+    <h1 class="page-title"><i class="fas fa-exclamation-circle"></i>{{ complaint.subject }}</h1>
+  </div>
+  <div>
+    {% if user_role == 'RENTER' %}
+      <a href="{% url 'my_complaints' %}" class="btn btn-outline-nestora"><i class="fas fa-arrow-left me-1"></i>Back</a>
+    {% else %}
+      <a href="{% url 'complaint_list' %}" class="btn btn-outline-nestora"><i class="fas fa-arrow-left me-1"></i>Back</a>
+    {% endif %}
+  </div>
+</div>
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card fade-in">
+      <div class="card-header"><i class="fas fa-info-circle me-2"></i>Complaint Information</div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted fw-semibold">Subject</div>
+          <div class="col-sm-8 fw-semibold">{{ complaint.subject }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted fw-semibold">Priority</div>
+          <div class="col-sm-8">
+            {% if complaint.priority == 'urgent' %}
+              <span class="badge badge-danger"><i class="fas fa-exclamation"></i> Urgent</span>
+            {% elif complaint.priority == 'high' %}
+              <span class="badge badge-pending"><i class="fas fa-arrow-up"></i> High</span>
+            {% elif complaint.priority == 'medium' %}
+              <span class="badge badge-occupied"><i class="fas fa-minus"></i> Medium</span>
+            {% elif complaint.priority == 'low' %}
+              <span class="badge badge-success"><i class="fas fa-arrow-down"></i> Low</span>
+            {% else %}
+              <span class="badge badge-cancelled">&mdash;</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted fw-semibold">Status</div>
+          <div class="col-sm-8">
+            {% if complaint.status == 'pending' %}
+              <span class="badge badge-pending"><i class="fas fa-clock"></i> Pending</span>
+            {% elif complaint.status == 'in_progress' %}
+              <span class="badge badge-occupied"><i class="fas fa-spinner"></i> In Progress</span>
+            {% elif complaint.status == 'resolved' %}
+              <span class="badge badge-success"><i class="fas fa-check"></i> Resolved</span>
+            {% elif complaint.status == 'closed' %}
+              <span class="badge badge-cancelled"><i class="fas fa-ban"></i> Closed</span>
+            {% elif complaint.status == 'rejected' %}
+              <span class="badge badge-danger"><i class="fas fa-times"></i> Rejected</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted fw-semibold">Created</div>
+          <div class="col-sm-8">{{ complaint.created_at|date:"F d, Y h:i A" }}</div>
+        </div>
+        {% if complaint.room %}
+          <div class="row mb-3">
+            <div class="col-sm-4 text-muted fw-semibold">Room</div>
+            <div class="col-sm-8">{{ complaint.room.room_number }}</div>
+          </div>
+        {% endif %}
+        <div class="row">
+          <div class="col-sm-4 text-muted fw-semibold">Description</div>
+          <div class="col-sm-8">{{ complaint.description|linebreaks }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card fade-in mt-4">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3"><i class="fas fa-user me-2"></i>Submitted By</h6>
+        <div class="d-flex align-items-center gap-3">
+          <div class="sidebar-avatar-circle" style="width:44px;height:44px;border-radius:50%;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0;">{{ complaint.user.get_full_name|default:complaint.user.email|first|upper }}</div>
+          <div>
+            <p class="fw-semibold mb-0">{{ complaint.user.get_full_name|default:complaint.user.email }}</p>
+            <small class="text-muted"><i class="fas fa-envelope me-1"></i>{{ complaint.user.email }}</small>
+            {% if complaint.user.profile.phone %}
+              <br><small class="text-muted"><i class="fas fa-phone me-1"></i>{{ complaint.user.profile.phone }}</small>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    {% if user_role != 'RENTER' %}
+      <div class="card fade-in">
+        <div class="card-header"><i class="fas fa-tools me-2"></i>Action Panel</div>
+        <div class="card-body">
+          <form method="post" action="{% url 'complaint_detail' complaint.pk %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label">Update Status</label>
+              <select name="status" class="form-select">
+                <option value="pending" {% if complaint.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="in_progress" {% if complaint.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                <option value="resolved" {% if complaint.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                <option value="closed" {% if complaint.status == 'closed' %}selected{% endif %}>Closed</option>
+                <option value="rejected" {% if complaint.status == 'rejected' %}selected{% endif %}>Rejected</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Assign To</label>
+              <select name="assigned_to" class="form-select">
+                <option value="">&mdash; Unassigned &mdash;</option>
+                {% for staff in staff_members %}
+                  <option value="{{ staff.pk }}" {% if complaint.assigned_to_id == staff.pk %}selected{% endif %}>{{ staff.get_full_name|default:staff.email }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Admin Note</label>
+              <textarea name="admin_note" class="form-control" rows="4" placeholder="Add a note...">{{ complaint.admin_note|default:'' }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-nestora w-100"><i class="fas fa-sync me-1"></i>Update</button>
+          </form>
+        </div>
+      </div>
+    {% else %}
+      <div class="card fade-in">
+        <div class="card-header"><i class="fas fa-clipboard-list me-2"></i>Current Status</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label text-muted">Status</label>
+            <div>
+              {% if complaint.status == 'pending' %}
+                <span class="badge badge-pending fs-6"><i class="fas fa-clock"></i> Pending</span>
+              {% elif complaint.status == 'in_progress' %}
+                <span class="badge badge-occupied fs-6"><i class="fas fa-spinner"></i> In Progress</span>
+              {% elif complaint.status == 'resolved' %}
+                <span class="badge badge-success fs-6"><i class="fas fa-check"></i> Resolved</span>
+              {% elif complaint.status == 'closed' %}
+                <span class="badge badge-cancelled fs-6"><i class="fas fa-ban"></i> Closed</span>
+              {% elif complaint.status == 'rejected' %}
+                <span class="badge badge-danger fs-6"><i class="fas fa-times"></i> Rejected</span>
+              {% endif %}
+            </div>
+          </div>
+          {% if complaint.admin_note %}
+            <div class="mb-0">
+              <label class="form-label text-muted">Admin Response</label>
+              <div class="p-3 rounded" style="background:var(--bg-body);">{{ complaint.admin_note|linebreaks }}</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

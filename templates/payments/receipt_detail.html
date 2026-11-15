@@ -1,0 +1,197 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Payment Receipt - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="receipt-print-area">
+  <!-- Print button for desktop (hidden on mobile print) -->
+  <div class="text-center mb-3 no-print">
+    <button class="btn btn-nestora btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button>
+  </div>
+
+  <div class="receipt-header">
+    <i class="fas fa-building text-accent" style="font-size: 2rem;"></i>
+    <h3 class="fw-bold mb-2">{{ nestora_name }}</h3>
+    <p class="text-muted mb-0">Smart Living. Smarter Management.</p>
+    <h4 class="fw-bold mt-3 text-accent">PAYMENT RECEIPT</h4>
+  </div>
+
+  <div class="receipt-body">
+    <!-- Receipt Information -->
+    <div class="receipt-section">
+      <h6 class="text-uppercase small mb-3"><i class="fas fa-receipt me-1"></i>Receipt Information</h6>
+      <table class="table table-borderless mb-0 receipt-table">
+        <tbody>
+          <tr>
+            <td class="fw-bold text-muted small" style="width: 40%;">Receipt No:</td>
+            <td class="small">{{ payment.receipt_number|default:payment.transaction_id|default:"&mdash;" }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted small">Transaction ID:</td>
+            <td class="small">
+              {% if payment.payment_method == 'cod' %}
+                <span class="text-warning">COD</span>
+              {% else %}
+                {{ payment.transaction_id|default:"&mdash;" }}
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted small">Booking Reference:</td>
+            <td class="small">
+              {% if payment.booking %}{{ payment.booking.booking_reference }}{% else %}&mdash;{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted small">Payment Date:</td>
+            <td class="small">{{ payment.payment_date|date:"d/m/Y" }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted small">Payment Status:</td>
+            <td class="small">
+              {% if payment.payment_method == 'cod' and payment.status != 'success' %}
+                <span class="badge bg-warning text-dark">Pending COD</span>
+              {% else %}
+                <span class="badge bg-success text-white">PAID</span>
+              {% endif %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Divider -->
+    <hr class="my-3">
+
+    {% if payment.booking %}
+    <!-- Renter Information -->
+    <div class="receipt-section">
+      <h6 class="text-uppercase small mb-3"><i class="fas fa-user me-1"></i>Renter Information</h6>
+      <table class="table table-borderless mb-0 receipt-table">
+        <tbody>
+          <tr>
+            <td class="fw-bold text-muted small">Name:</td>
+            <td class="small">{{ payment.booking.user.get_full_name|default:payment.booking.user.email }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted small">Email:</td>
+            <td class="small">{{ payment.booking.user.email }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted small">Phone:</td>
+            <td class="small">{{ payment.booking.user.phone|default:"N/A" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Divider -->
+    <hr class="my-3">
+
+    <!-- Accommodation -->
+    <div class="receipt-section">
+      <h6 class="text-uppercase small mb-3"><i class="fas fa-bed me-1"></i>Accommodation</h6>
+      <table class="table table-borderless mb-0 receipt-table">
+        <tbody>
+          <tr>
+            <td class="fw-bold text-muted small">Hostel:</td>
+            <td class="small">{{ payment.booking.room.hostel.name }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted small">Floor:</td>
+            <td class="small">{{ payment.booking.room.unit.floor.display_name|default:"Ground" }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted small">Unit:</td>
+            <td class="small">{{ payment.booking.room.unit.name }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted small">Room:</td>
+            <td class="small">{{ payment.booking.room.room_number }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted small">Bed:</td>
+            <td class="small">{{ payment.bed.bed_number|default:"N/A" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Divider -->
+    <hr class="my-3">
+
+    <!-- Payment Details -->
+    <div class="receipt-section">
+      <h6 class="text-uppercase small mb-3"><i class="fas fa-wallet me-1"></i>Payment Details</h6>
+      <table class="table table-borderless mb-0 receipt-table">
+        <thead>
+          <tr>
+            <th class="fw-bold text-muted small" style="width: 60%;">Description</th>
+            <th class="fw-bold text-muted small" style="width: 40%;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="small">Booking Payment</td>
+            <td class="small">{{ settings.NESTORA_CURRENCY|default:'৳' }}{{ payment.booking.total_amount|default:0 }}</td>
+          </tr>
+          <tr>
+            <td class="small">Security Deposit</td>
+            <td class="small">{{ settings.NESTORA_CURRENCY|default:'৳' }}{{ payment.booking.room.security_deposit|default:0 }}</td>
+          </tr>
+          <tr>
+            <td class="small">Meal Charge</td>
+            <td class="small">{{ settings.NESTORA_CURRENCY|default:'৳' }}0</td>
+          </tr>
+          <tr class="table-primary">
+            <td class="fw-bold small" style="font-size: 9px;">TOTAL PAID</td>
+            <td class="fw-bold small" style="font-size: 9px;">{{ settings.NESTORA_CURRENCY|default:'৳' }}{{ total_paid }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">
+      <i class="fas fa-info-circle me-1"></i>Booking information not available for this payment.
+    </div>
+    {% endif %}
+
+    <!-- Payment Method and Status -->
+    <div class="mt-3 receipt-footer text-center">
+      <p class="text-muted small">
+        Payment Method: 
+        {% if payment.payment_method == 'cod' %}
+          <span class="fw-bold text-success">Cash on Delivery</span>
+        {% else %}
+          SSLCommerz
+        {% endif %}
+      </p>
+      <p class="fw-bold mb-0">
+        {% if payment.payment_method == 'cod' and payment.status != 'success' %}
+          Status: <span class="text-warning">Pending COD</span>
+        {% else %}
+          Status: PAID
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="mt-4 receipt-footer text-center no-print">
+    <p class="text-muted small">Thank you for choosing Touch and Solve (TNS) Hostel.</p>
+    <p class="text-muted small">This is a computer-generated receipt.</p>
+  </div>
+</div>
+
+<!-- Print button for mobile -->
+<div class="text-center mb-3 d-block d-md-none no-print">
+  <button class="btn btn-nestora btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  if (new URLSearchParams(window.location.search).get('print') === '1') {
+    window.addEventListener('load', function () { window.print(); });
+  }
+</script>
+{% endblock %}

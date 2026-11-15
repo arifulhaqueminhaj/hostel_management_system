@@ -1,0 +1,64 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Notices - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <h1 class="page-title"><i class="fas fa-bullhorn"></i>Notices</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item active">Notices</li>
+            </ol>
+        </nav>
+    </div>
+    {% if user.is_staff or user.role == 'SUPER_ADMIN' or user.role == 'HOSTEL_MANAGER' %}
+    <div>
+        <a href="{% url 'notice_create' %}" class="btn btn-nestora">
+            <i class="fas fa-plus me-1"></i> Add Notice
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% for notice in notices %}
+<div class="card mb-3 slide-up">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                {% if notice.category == 'emergency' %}
+                <span class="badge badge-danger">Emergency</span>
+                {% elif notice.category == 'maintenance' %}
+                <span class="badge badge-warning">Maintenance</span>
+                {% elif notice.category == 'general' %}
+                <span class="badge badge-info">General</span>
+                {% elif notice.category == 'notice' %}
+                <span class="badge badge-pending">Notice</span>
+                {% else %}
+                <span class="badge badge-info">{{ notice.category|title }}</span>
+                {% endif %}
+                <strong class="fs-5 ms-2">{{ notice.title }}</strong>
+            </div>
+            <small class="text-muted">{{ notice.created_at|date:'M d, Y H:i' }}</small>
+        </div>
+        <p class="text-muted mb-2">{{ notice.content|truncatewords:50|linebreaks }}</p>
+        <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                <i class="fas fa-user me-1"></i> {{ notice.created_by.get_full_name|default:notice.created_by.email }}
+            </small>
+            {% if user.is_staff or user.role == 'SUPER_ADMIN' or user.role == 'HOSTEL_MANAGER' %}
+            <div>
+                <a href="{% url 'notice_edit' notice.pk %}" class="btn btn-ghost btn-sm"><i class="fas fa-edit"></i></a>
+                <a href="{% url 'notice_delete' notice.pk %}" class="btn btn-ghost btn-sm text-danger"><i class="fas fa-trash"></i></a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="empty-state">
+    <i class="fas fa-bullhorn"></i>
+    <h5>No notices yet</h5>
+    <p class="text-muted">Check back later for announcements.</p>
+</div>
+{% endfor %}
+{% endblock %}

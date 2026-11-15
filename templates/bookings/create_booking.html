@@ -1,0 +1,136 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Create Booking - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'search_rooms' %}">Search Rooms</a></li>
+                <li class="breadcrumb-item active">Create Booking</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-calendar-check"></i>Create Booking</h1>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card fade-in">
+            <div class="card-header">
+                <span><i class="fas fa-file-invoice me-2 text-accent"></i>Booking Details</span>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate id="booking-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="room" value="{{ room.id }}">
+                    {% if form.non_field_errors %}
+                      <div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-bed me-1 text-accent"></i>Select Bed</label>
+                        {% if beds %}
+                        <div class="row g-2" id="bed-options">
+                            {% for bed in beds %}
+                            <div class="col-6 col-md-4">
+                                <label class="d-block border rounded p-2 text-center bed-option" style="cursor:pointer;">
+                                    <input type="radio" name="bed" value="{{ bed.pk }}" class="me-1" required
+                                        {% if request.POST.bed == bed.pk|stringformat:"s" %}checked{% endif %}>
+                                    <div style="font-size:1.2rem; margin-bottom: 4px;"><i class="fas fa-bed ms-1"></i> {{ bed.bed_number }}</div>
+                                    {% if bed.position %}<small class="text-muted d-block">Position: {{ bed.get_position_display }}</small>{% endif %}
+                                    {% if bed.window_side %}<small class="text-muted d-block">Window: Yes</small>{% else %}<small class="text-muted d-block">Window: No</small>{% endif %}
+                                    {% if bed.has_charging_point %}<small class="text-muted d-block"><i class="fas fa-plug me-1"></i>Charging: Yes</small>{% else %}<small class="text-muted d-block"><i class="fas fa-plug-slash me-1"></i>Charging: No</small>{% endif %}
+                                    {% if bed.has_reading_light %}<small class="text-muted d-block"><i class="fas fa-lightbulb me-1"></i>Reading: Yes</small>{% else %}<small class="text-muted d-block"><i class="fas fa-lightbulb-slash me-1"></i>Reading: No</small>{% endif %}
+                                    {% if bed.status != 'available' %}<small class="text-danger d-block"><strong>Currently unavailable</strong></small>{% endif %}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning py-2 mb-0 small">
+                            <i class="fas fa-exclamation-triangle me-1"></i>No beds are currently available in this room.
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-calendar-day me-1 text-accent"></i>Check In Date</label>
+                        <input type="date" name="check_in" class="form-control {% if form.check_in.errors %}is-invalid{% endif %}" min="{% now 'Y-m-d' %}" value="{% firstof request.POST.check_in request.GET.check_in %}" required>
+                        {% if form.check_in.errors %}<div class="invalid-feedback">{{ form.check_in.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-calendar-week me-1 text-accent"></i>Check Out Date</label>
+                        <input type="date" name="check_out" class="form-control {% if form.check_out.errors %}is-invalid{% endif %}" min="{% now 'Y-m-d' %}" value="{% firstof request.POST.check_out request.GET.check_out %}" required>
+                        {% if form.check_out.errors %}<div class="invalid-feedback">{{ form.check_out.errors }}</div>{% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-nestora btn-lg w-100 mt-3" {% if not beds %}disabled{% endif %}>
+                        <i class="fas fa-credit-card me-2"></i>Proceed to Payment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        {% if room %}
+        <div class="card fade-in delay-1">
+            <div class="card-header">
+                <span><i class="fas fa-receipt me-2 text-accent"></i>Booking Summary</span>
+            </div>
+            <div class="card-body">
+                {% if room.image %}
+                <img src="{{ room.image.url }}" class="img-fluid rounded mb-3" alt="{{ room.room_number }}" style="height: 180px; width: 100%; object-fit: cover;">
+                {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center rounded mb-3" style="height: 180px;">
+                    <i class="fas fa-door-closed text-muted" style="font-size: 3rem;"></i>
+                </div>
+                {% endif %}
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted fw-semibold">Room</td>
+                        <td class="text-end fw-bold">{{ room.room_number }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Hostel</td>
+                        <td class="text-end">{{ room.hostel.name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Location</td>
+                        <td class="text-end">{{ room.floor.display_name|default:'Ground' }}{% if room.unit %} &middot; Unit {{ room.unit.name }}{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Room Type</td>
+                        <td class="text-end">{% if room.room_type %}{{ room.room_type.name }}{% else %}-{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Rent / Month</td>
+                        <td class="text-end fw-bold text-accent">{{ settings.NESTORA_CURRENCY|default:'৳' }}{{ room.rent }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Beds Free</td>
+                        <td class="text-end">{{ beds|length }} of {{ room.beds_total }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="card fade-in delay-1">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-door-open text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                <h6 class="text-muted mt-3">No Room Selected</h6>
+                <p class="text-muted small mb-0">Browse rooms first to see the summary here.</p>
+                <a href="{% url 'search_rooms' %}" class="btn btn-outline-nestora btn-sm mt-3">
+                    <i class="fas fa-search me-1"></i>Search Rooms
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .bed-option input { accent-color: var(--accent); }
+    .bed-option:has(input:checked) { border-color: var(--accent) !important; background: rgba(255, 107, 107, 0.06); }
+</style>
+{% endblock %}

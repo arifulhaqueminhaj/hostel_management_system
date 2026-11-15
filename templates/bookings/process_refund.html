@@ -1,0 +1,123 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Process Refund - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header fade-in">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard_home' %}"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'refund_list' %}">Refunds</a></li>
+                <li class="breadcrumb-item active">Process Refund</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-money-bill-wave"></i>Process Refund</h1>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card fade-in">
+            <div class="card-header">
+                <span><i class="fas fa-receipt me-2 text-accent"></i>Refund Details</span>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-3">
+                    <tr>
+                        <td class="text-muted fw-semibold">Booking Reference</td>
+                        <td class="text-end">{{ refund.cancellation.booking.booking_reference }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Renter</td>
+                        <td class="text-end">{{ refund.cancellation.booking.user.get_full_name|default:refund.cancellation.booking.user.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Original Payment</td>
+                        <td class="text-end">${{ refund.payment.amount }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Cancellation Fee</td>
+                        <td class="text-end text-danger">${{ refund.cancellation.cancellation_fee }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Days Before Check-in</td>
+                        <td class="text-end">{{ refund.cancellation.days_before_checkin }} day{{ refund.cancellation.days_before_checkin|pluralize }}</td>
+                    </tr>
+                    <tr class="border-top">
+                        <td class="fw-bold fs-5">Refund Amount</td>
+                        <td class="text-end fw-bold fs-5" style="color:var(--accent);">${{ refund.amount }}</td>
+                    </tr>
+                </table>
+
+                {% if refund.cancellation.reason %}
+                <div class="mb-3">
+                    <p class="mb-1 text-muted small">Cancellation Reason</p>
+                    <p class="p-2 bg-light rounded">{{ refund.cancellation.reason }}</p>
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-sticky-note me-1 text-accent"></i>Notes (optional)</label>
+                        <textarea name="notes" class="form-control" rows="2" placeholder="Internal notes about this refund..."></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'booking_detail' refund.cancellation.booking.pk %}" class="btn btn-ghost">
+                            <i class="fas fa-arrow-left me-1"></i>Back
+                        </a>
+                        <button type="submit" name="action" value="reject" class="btn btn-outline-danger">
+                            <i class="fas fa-times me-1"></i>Reject
+                        </button>
+                        <button type="submit" name="action" value="approve" class="btn btn-success" onclick="return confirm('Approve refund of ${{ refund.amount }}?')">
+                            <i class="fas fa-check me-1"></i>Approve Refund
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card fade-in delay-1">
+            <div class="card-header">
+                <span><i class="fas fa-history me-2 text-accent"></i>Timeline</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex gap-3 mb-3">
+                    <div class="text-center">
+                        <div class="badge badge-success" style="font-size:0.7rem;">Booked</div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <small class="text-muted">Booking created</small>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 mb-3">
+                    <div class="text-center">
+                        <div class="badge badge-success" style="font-size:0.7rem;">Paid</div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <small class="text-muted">Payment of ${{ refund.payment.amount }} received</small>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 mb-3">
+                    <div class="text-center">
+                        <div class="badge badge-danger" style="font-size:0.7rem;">Cancelled</div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <small class="text-muted">Cancelled {{ refund.cancellation.days_before_checkin }} day{{ refund.cancellation.days_before_checkin|pluralize }} before check-in</small>
+                    </div>
+                </div>
+                <div class="d-flex gap-3">
+                    <div class="text-center">
+                        <div class="badge badge-warning" style="font-size:0.7rem;">Refund</div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <small class="text-muted">Refund of ${{ refund.amount }} pending approval</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

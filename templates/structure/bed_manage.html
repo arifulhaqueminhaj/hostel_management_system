@@ -1,0 +1,107 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Beds - Room {{ room.room_number }} - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><i class="fas fa-bed"></i> Beds - Room {{ room.room_number }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'hostel_detail' room.hostel.slug %}">{{ room.hostel.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'room_list' %}">Rooms</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'room_detail' room.pk %}">Room {{ room.room_number }}</a></li>
+                <li class="breadcrumb-item active">Beds</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-bed"></i> All Beds ({{ beds|length }})</span>
+                <span class="badge badge-available">{{ room.beds_available }} free</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Bed</th>
+                                <th>Status</th>
+                                <th>Current Holder</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bed in beds %}
+                            <tr>
+                                <td class="fw-semibold"><i class="fas fa-bed me-2" style="color:var(--accent);"></i>{{ bed.bed_number }}</td>
+                                <td>
+                                    {% if bed.status == 'available' %}<span class="badge badge-available">Available</span>
+                                    {% elif bed.status == 'occupied' %}<span class="badge badge-occupied">Occupied</span>
+                                    {% else %}<span class="badge badge-maintenance">Maintenance</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">
+                                    {% for b in bed.bookings.all %}
+                                        {{ b.user.full_name }} ({{ b.get_status_display }})
+                                    {% empty %}
+                                        -
+                                    {% endfor %}
+                                </td>
+                                <td class="text-end table-actions">
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="bed_id" value="{{ bed.pk }}">
+                                        <input type="hidden" name="action" value="toggle_status">
+                                        <select name="status" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
+                                            <option value="" disabled selected>Change status...</option>
+                                            <option value="available" {% if bed.status == 'available' %}disabled{% endif %}>Available</option>
+                                            <option value="maintenance" {% if bed.status == 'maintenance' %}disabled{% endif %}>Maintenance</option>
+                                            <option value="occupied" disabled>Occupied (via booking)</option>
+                                        </select>
+                                    </form>
+                                    <form method="post" class="d-inline" onsubmit="return confirm('Remove this bed?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="bed_id" value="{{ bed.pk }}">
+                                        <input type="hidden" name="action" value="delete">
+                                        <button type="submit" class="btn btn-sm btn-icon btn-ghost" title="Delete"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center py-4 text-muted">No beds yet. Add the first bed.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><span><i class="fas fa-plus"></i> Add Bed</span></div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-plus"></i> Add Bed</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Managers - Touch and Solve (TNS){% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><i class="fas fa-users"></i> Hostel Managers</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item active">Managers</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'manager_add' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Manager</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label">Search</label>
+                <input type="text" name="q" class="form-control" placeholder="Name, email or phone..." value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    <option value="unassigned" {% if request.GET.status == 'unassigned' %}selected{% endif %}>Unassigned (no hostel)</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Filter</button>
+                <a href="{% url 'manager_list' %}" class="btn btn-ghost" title="Reset"><i class="fas fa-undo"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>SL</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Assigned Hostel</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for manager in page_obj %}
+                    <tr>
+                        <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                        <td class="fw-semibold">{{ manager.full_name|default:manager.email }}</td>
+                        <td>{{ manager.email }}</td>
+                        <td>{{ manager.phone|default:"-" }}</td>
+                        <td>
+                            {% if manager.assigned_hostel %}
+                                <span class="badge badge-available">{{ manager.assigned_hostel.name }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if manager.is_active %}<span class="badge badge-available">Active</span>
+                            {% else %}<span class="badge badge-maintenance">Inactive</span>{% endif %}
+                        </td>
+                        <td class="text-end table-actions">
+                            <a href="{% url 'manager_edit' manager.pk %}" class="btn btn-sm btn-icon btn-ghost" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'manager_delete' manager.pk %}" class="btn btn-sm btn-icon btn-ghost" title="Deactivate" style="color:var(--accent-hover);"><i class="fas fa-user-slash"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">No managers found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"><i class="fas fa-angle-left"></i></a></li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a></li>
+        {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"><i class="fas fa-angle-right"></i></a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
