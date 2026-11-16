@@ -27,6 +27,7 @@ ALLOWED_HOSTS = [
 for deployment_host in (
     os.environ.get('VERCEL_URL'),
     os.environ.get('VERCEL_PROJECT_PRODUCTION_URL'),
+    os.environ.get('RENDER_EXTERNAL_HOSTNAME'),
 ):
     if deployment_host and deployment_host not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(deployment_host)
@@ -131,6 +132,7 @@ CSRF_TRUSTED_ORIGINS.extend(
     for host in (
         os.environ.get('VERCEL_URL'),
         os.environ.get('VERCEL_PROJECT_PRODUCTION_URL'),
+        os.environ.get('RENDER_EXTERNAL_HOSTNAME'),
     )
     if host
 )
