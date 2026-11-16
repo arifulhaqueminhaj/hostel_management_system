@@ -48,9 +48,11 @@ uploaded or copied to Render.
 
 After confirming the persistent disk is mounted at `/var/data`, the Render
 SQLite database needs its Django schema created with `python manage.py migrate`.
-Run this against the Render service only when you authorize it; it does not
-transfer or modify the local SQLite database. Do not run migrations as a
-pre-deploy command, since that command may not have the mounted disk available.
+Run this once from the Render Shell after confirming the disk is mounted and
+`SQLITE_PATH` points to `/var/data/db.sqlite3`. This creates the schema on
+Render; it does not transfer or modify the local SQLite database. Do not run
+migrations as a pre-deploy command, since that command may not have the mounted
+disk available.
 
 Static assets are collected from `static/` into `staticfiles/` during the
 build. Uploaded media is stored under `/var/data/media` so it persists with
