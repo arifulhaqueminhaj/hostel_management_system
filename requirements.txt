@@ -4,4 +4,5 @@ gunicorn>=23,<24
 psycopg[binary]>=3.2,<4
 python-dotenv>=1.0,<2
 requests>=2.32,<3
+django-storages[s3]>=1.14.6,<2
 whitenoise>=6.9,<7
