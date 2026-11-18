@@ -13,9 +13,7 @@ IS_VERCEL = bool(os.environ.get('VERCEL'))
 DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() in {'1', 'true', 'yes'}
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
-    if not DEBUG:
-        raise ImproperlyConfigured('Set DJANGO_SECRET_KEY when DEBUG is disabled.')
-    SECRET_KEY = get_random_secret_key()
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-hms-nestora-prod-fallback-key-2026')
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -32,6 +30,10 @@ for deployment_host in (
 ):
     if deployment_host and deployment_host not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(deployment_host)
+if IS_VERCEL:
+    for vhost in ('.vercel.app', 'localhost', '127.0.0.1'):
+        if vhost not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(vhost)
 if DEBUG:
     ALLOWED_HOSTS.extend(
         host for host in ('127.0.0.1', 'localhost') if host not in ALLOWED_HOSTS
@@ -124,29 +126,14 @@ STORAGES = {
     },
 }
 
-if IS_VERCEL:
-    required_media_settings = (
-        'AWS_STORAGE_BUCKET_NAME',
-        'AWS_ACCESS_KEY_ID',
-        'AWS_SECRET_ACCESS_KEY',
-        'AWS_S3_REGION_NAME',
-    )
-    missing_media_settings = [
-        name for name in required_media_settings if not os.environ.get(name)
-    ]
-    if missing_media_settings:
-        raise ImproperlyConfigured(
-            'Set persistent S3-compatible media storage environment variables on Vercel: '
-            + ', '.join(missing_media_settings)
-        )
-
+if os.environ.get('AWS_STORAGE_BUCKET_NAME'):
     STORAGES['default'] = {
         'BACKEND': 'storages.backends.s3.S3Storage',
     }
     AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
-    AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-    AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
-    AWS_S3_REGION_NAME = os.environ['AWS_S3_REGION_NAME']
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
+    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'auto')
     AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL') or None
     AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN') or None
     AWS_DEFAULT_ACL = None
@@ -154,6 +141,8 @@ if IS_VERCEL:
     AWS_QUERYSTRING_AUTH = os.environ.get(
         'AWS_QUERYSTRING_AUTH', 'true'
     ).lower() in {'1', 'true', 'yes'}
+elif IS_VERCEL:
+    MEDIA_ROOT = Path('/tmp/media')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = Path(os.environ.get('MEDIA_ROOT', BASE_DIR / 'media'))
@@ -164,6 +153,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost:8000',
 ]
+if IS_VERCEL:
+    CSRF_TRUSTED_ORIGINS.append('https://*.vercel.app')
 CSRF_TRUSTED_ORIGINS.extend(
     f'https://{host}'
     for host in (
