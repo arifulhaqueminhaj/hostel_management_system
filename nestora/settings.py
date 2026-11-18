@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
+IS_VERCEL = bool(os.environ.get('VERCEL'))
 
 DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() in {'1', 'true', 'yes'}
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
@@ -78,13 +79,18 @@ TEMPLATES = [
 WSGI_APPLICATION = 'nestora.wsgi.application'
 
 if os.environ.get('DATABASE_URL'):
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
-            ssl_require=not DEBUG,
-        )
-    }
-elif os.environ.get('VERCEL'):
+    database_config = dj_database_url.config(
+        conn_max_age=0 if IS_VERCEL else 600,
+        ssl_require=not DEBUG,
+    )
+    if (
+        (database_config.get('HOST') or '').endswith('.pooler.supabase.com')
+        and str(database_config.get('PORT')) == '6543'
+    ):
+        # Supabase's shared transaction pooler does not support prepared statements.
+        database_config.setdefault('OPTIONS', {})['prepare_threshold'] = None
+    DATABASES = {'default': database_config}
+elif IS_VERCEL:
     raise ImproperlyConfigured('Set DATABASE_URL to a persistent PostgreSQL database on Vercel.')
 else:
     DATABASES = {
@@ -108,7 +114,7 @@ TIME_ZONE = 'Asia/Dhaka'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STORAGES = {
@@ -117,6 +123,37 @@ STORAGES = {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
+
+if IS_VERCEL:
+    required_media_settings = (
+        'AWS_STORAGE_BUCKET_NAME',
+        'AWS_ACCESS_KEY_ID',
+        'AWS_SECRET_ACCESS_KEY',
+        'AWS_S3_REGION_NAME',
+    )
+    missing_media_settings = [
+        name for name in required_media_settings if not os.environ.get(name)
+    ]
+    if missing_media_settings:
+        raise ImproperlyConfigured(
+            'Set persistent S3-compatible media storage environment variables on Vercel: '
+            + ', '.join(missing_media_settings)
+        )
+
+    STORAGES['default'] = {
+        'BACKEND': 'storages.backends.s3.S3Storage',
+    }
+    AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
+    AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+    AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+    AWS_S3_REGION_NAME = os.environ['AWS_S3_REGION_NAME']
+    AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL') or None
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN') or None
+    AWS_DEFAULT_ACL = None
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_QUERYSTRING_AUTH = os.environ.get(
+        'AWS_QUERYSTRING_AUTH', 'true'
+    ).lower() in {'1', 'true', 'yes'}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = Path(os.environ.get('MEDIA_ROOT', BASE_DIR / 'media'))
@@ -154,9 +191,15 @@ NESTORA_CURRENCY = '৳'
 SSL_COMMERZ_STORE_ID = os.environ.get('SSLCOMMERZ_STORE_ID', '')
 SSL_COMMERZ_STORE_PASSWORD = os.environ.get('SSLCOMMERZ_STORE_PASSWORD', '')
 # Session API: used to INITIATE a payment session (returns GatewayPageURL).
-SSLCOMMERZ_API_URL = 'https://sandbox.sslcommerz.com/gwprocess/v4/api.php'
+SSLCOMMERZ_API_URL = os.environ.get(
+    'SSLCOMMERZ_API_URL',
+    'https://sandbox.sslcommerz.com/gwprocess/v4/api.php',
+)
 # Validator API: used AFTER payment to verify a transaction via val_id.
-SSLCOMMERZ_VALIDATOR_URL = 'https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php'
+SSLCOMMERZ_VALIDATOR_URL = os.environ.get(
+    'SSLCOMMERZ_VALIDATOR_URL',
+    'https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php',
+)
 
 # Email
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
